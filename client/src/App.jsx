@@ -1,0 +1,250 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { api, streamChat } from './api.js';
+import Sidebar from './components/Sidebar.jsx';
+import ChatView from './components/ChatView.jsx';
+import RightPanel from './components/RightPanel.jsx';
+
+export default function App() {
+  const [sessions, setSessions] = useState([]);
+  const [session, setSession] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [models, setModels] = useState([]);
+  const [model, setModel] = useState('llama-3.3-70b-versatile');
+  const [groqConfigured, setGroqConfigured] = useState(true);
+  const [integrations, setIntegrations] = useState(null);
+  const [streaming, setStreaming] = useState(false);
+  const [liveText, setLiveText] = useState('');
+  const [liveTools, setLiveTools] = useState([]);
+  const [error, setError] = useState('');
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelTab, setPanelTab] = useState('files');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const abortRef = useRef(null);
+  const activeIdRef = useRef(null);
+
+  const openSession = useCallback(async (id) => {
+    abortRef.current?.abort();
+    setStreaming(false);
+    setLiveText('');
+    setLiveTools([]);
+    setError('');
+    try {
+      const data = await api.session(id);
+      activeIdRef.current = id;
+      setSession(data.session);
+      setMessages(data.messages);
+      setFiles(data.files);
+      if (data.session.model) setModel(data.session.model);
+    } catch (err) {
+      setError(err.message);
+    }
+    setSidebarOpen(false);
+  }, []);
+
+  const refreshIntegrations = useCallback(async () => {
+    try {
+      setIntegrations(await api.integrations());
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [m, s, integ] = await Promise.all([api.models(), api.sessions(), api.integrations()]);
+        if (cancelled) return;
+        setModels(m.models);
+        setModel(m.default);
+        setGroqConfigured(m.groqConfigured);
+        setIntegrations(integ);
+        setSessions(s.sessions);
+        if (s.sessions.length) await openSession(s.sessions[0].id);
+      } catch (err) {
+        setError(err.message);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [openSession]);
+
+  async function newSession() {
+    abortRef.current?.abort();
+    activeIdRef.current = null;
+    setSession(null);
+    setMessages([]);
+    setFiles([]);
+    setLiveText('');
+    setLiveTools([]);
+    setError('');
+    setSidebarOpen(false);
+  }
+
+  async function removeSession(id, event) {
+    event.stopPropagation();
+    await api.deleteSession(id);
+    const rest = sessions.filter((s) => s.id !== id);
+    setSessions(rest);
+    if (session?.id === id) {
+      if (rest.length) await openSession(rest[0].id);
+      else await newSession();
+    }
+  }
+
+  async function changeModel(next) {
+    setModel(next);
+    if (session) {
+      setSession({ ...session, model: next });
+      try {
+        await api.session(session.id);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  async function send(text) {
+    if (streaming || !text.trim()) return;
+    setError('');
+
+    let active = session;
+    if (!active) {
+      try {
+        const { session: created } = await api.createSession({ model });
+        active = created;
+        setSession(created);
+        setSessions((prev) => [created, ...prev]);
+      } catch (err) {
+        setError(err.message);
+        return;
+      }
+    }
+
+    const sid = active.id;
+    setMessages((prev) => [
+      ...prev,
+      { id: `local-${Date.now()}`, role: 'user', content: text },
+    ]);
+    setStreaming(true);
+    setLiveText('');
+    setLiveTools([]);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      await streamChat({
+        sessionId: sid,
+        message: text,
+        model,
+        signal: controller.signal,
+        onEvent: (event) => {
+          if (event.type === 'text') {
+            setLiveText((prev) => prev + event.delta);
+          } else if (event.type === 'tool_start') {
+            setLiveTools((prev) => [
+              ...prev,
+              { id: event.id, name: event.name, args: event.args, status: 'running' },
+            ]);
+          } else if (event.type === 'tool_result') {
+            setLiveTools((prev) =>
+              prev.map((tool) =>
+                tool.id === event.id
+                  ? { ...tool, status: event.ok ? 'ok' : 'error', result: event.result }
+                  : tool
+              )
+            );
+          } else if (event.type === 'error') {
+            setError(event.message);
+          }
+        },
+      });
+    } catch (err) {
+      if (err.name !== 'AbortError') setError(err.message);
+    } finally {
+      setStreaming(false);
+      abortRef.current = null;
+      try {
+        const data = await api.session(sid);
+        setSession(data.session);
+        setMessages(data.messages);
+        setFiles(data.files);
+        setSessions((prev) => [data.session, ...prev.filter((s) => s.id !== sid)]);
+      } catch {
+        /* keep optimistic state */
+      }
+      setLiveText('');
+      setLiveTools([]);
+    }
+  }
+
+  function stop() {
+    abortRef.current?.abort();
+  }
+
+  async function refreshFiles() {
+    if (!session) return;
+    try {
+      const data = await api.workspace(session.id);
+      setFiles(data.files);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return (
+    <div className="app">
+      <Sidebar
+        sessions={sessions}
+        activeId={session?.id}
+        onSelect={openSession}
+        onNew={newSession}
+        onDelete={removeSession}
+        integrations={integrations}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      <main className="main">
+        <ChatView
+          session={session}
+          messages={messages}
+          models={models}
+          model={model}
+          onModelChange={changeModel}
+          onSend={send}
+          onStop={stop}
+          streaming={streaming}
+          liveText={liveText}
+          liveTools={liveTools}
+          error={error}
+          panelOpen={panelOpen}
+          onTogglePanel={() => setPanelOpen((v) => !v)}
+          onOpenPanel={(tab) => {
+            setPanelTab(tab);
+            setPanelOpen(true);
+          }}
+          onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          groqConfigured={groqConfigured}
+        />
+      </main>
+
+      {panelOpen && (
+        <RightPanel
+          session={session}
+          files={files}
+          integrations={integrations}
+          onRefreshFiles={refreshFiles}
+          onRefreshIntegrations={refreshIntegrations}
+          tab={panelTab}
+          setTab={setPanelTab}
+          onClose={() => setPanelOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
