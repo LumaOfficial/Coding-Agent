@@ -123,8 +123,9 @@ function EmptyState({ onPick }) {
   return (
     <div className="empty">
       <div className="empty-mark">
-        <IconSpark width={22} height={22} />
+        <IconSpark width={24} height={24} />
       </div>
+      <span className="empty-eyebrow">Local engine · no API key</span>
       <h1 className="empty-title">
         Fix with <span className="grad">Forge</span>
       </h1>
@@ -140,6 +141,13 @@ function EmptyState({ onPick }) {
             <span className="suggestion-prompt">{s.prompt}</span>
           </button>
         ))}
+      </div>
+      <div className="empty-chips">
+        <span className="chip">Auto-fix</span>
+        <span className="chip">Debug</span>
+        <span className="chip">GitHub</span>
+        <span className="chip">Hugging Face</span>
+        <span className="chip">Store tests</span>
       </div>
     </div>
   );
@@ -175,18 +183,29 @@ export default function ChatView({
   return (
     <div className="chat">
       <header className="chat-header">
-        <button className="icon-btn only-mobile" onClick={onToggleSidebar} title="Sessions">
-          <IconMenu />
-        </button>
-        <div className="chat-title">
-          <span className="chat-title-text">{session?.title || 'New session'}</span>
-          <span className="chat-sub">
-            {streaming ? 'working…' : activeModel ? activeModel.label : 'Local'}
-          </span>
-        </div>
-        <div className="chat-actions">
+        <div className="header-top">
+          <button className="icon-btn" onClick={onToggleSidebar} title="Sessions">
+            <IconMenu />
+          </button>
+          <div className="chat-title">
+            <span className="chat-title-text">{session?.title || 'New session'}</span>
+            <span className="chat-sub">
+              <span className={`live-dot ${streaming ? 'busy' : ''}`} />
+              {streaming ? 'Working…' : activeModel ? activeModel.label : 'Local engine'}
+            </span>
+          </div>
           <button
-            className="fix-btn"
+            className={`icon-btn ${panelOpen ? 'active' : ''}`}
+            onClick={onTogglePanel}
+            title="Toggle workspace panel"
+          >
+            <IconPanel />
+          </button>
+        </div>
+
+        <div className="toolbar">
+          <button
+            className="act-btn"
             onClick={() => onSend('Fix the code in my workspace and debug it.')}
             disabled={streaming}
             title="Run the local auto-fixer"
@@ -195,7 +214,7 @@ export default function ChatView({
             Fix code
           </button>
           <button
-            className="fix-btn ghost"
+            className="act-btn ghost"
             onClick={onOpenStoreTests}
             title="Test the workspace against app stores"
           >
@@ -214,13 +233,6 @@ export default function ChatView({
               </option>
             ))}
           </select>
-          <button
-            className={`icon-btn ${panelOpen ? 'active' : ''}`}
-            onClick={onTogglePanel}
-            title="Toggle workspace panel"
-          >
-            <IconPanel />
-          </button>
         </div>
       </header>
 

@@ -51,7 +51,10 @@ export default function Sidebar({
           </button>
         </div>
 
-        <div className="sidebar-section-label">Sessions</div>
+        <div className="sidebar-section-label">
+          Sessions
+          <span className="session-count">{sessions.length}</span>
+        </div>
 
         <div className="session-list">
           {sessions.length === 0 && (

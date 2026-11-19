@@ -91,19 +91,22 @@ export default function RightPanel({
             className={`tab ${tab === 'files' ? 'active' : ''}`}
             onClick={() => setTab('files')}
           >
-            Workspace
+            <IconFile width={13} height={13} />
+            <span>Files</span>
           </button>
           <button
             className={`tab ${tab === 'integrations' ? 'active' : ''}`}
             onClick={() => setTab('integrations')}
           >
-            Integrations
+            <IconSpark width={13} height={13} />
+            <span>Integrations</span>
           </button>
           <button
             className={`tab ${tab === 'stores' ? 'active' : ''}`}
             onClick={() => setTab('stores')}
           >
-            Stores
+            <IconCheck width={13} height={13} />
+            <span>Stores</span>
           </button>
         </div>
         <button className="icon-btn" onClick={onClose} title="Close panel">
