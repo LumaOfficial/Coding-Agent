@@ -10,7 +10,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [models, setModels] = useState([]);
-  const [model, setModel] = useState('llama-3.3-70b-versatile');
+  const [model, setModel] = useState('openai/gpt-oss-120b');
   const [groqConfigured, setGroqConfigured] = useState(true);
   const [integrations, setIntegrations] = useState(null);
   const [streaming, setStreaming] = useState(false);

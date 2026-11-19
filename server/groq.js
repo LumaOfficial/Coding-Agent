@@ -1,12 +1,9 @@
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export const MODELS = [
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', note: 'Best general coding model' },
-  { id: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B', note: 'Strong reasoning + tools' },
+  { id: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B', note: 'Best for agentic coding + tools' },
   { id: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B', note: 'Fast and cheap' },
-  { id: 'moonshotai/kimi-k2-instruct', label: 'Kimi K2', note: 'Large context, agentic' },
-  { id: 'qwen/qwen3-32b', label: 'Qwen3 32B', note: 'Good at code edits' },
-  { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B', note: 'Fastest, simple tasks' },
+  { id: 'qwen/qwen3.8-27b', label: 'Qwen3 27B', note: 'Good at code edits' },
 ];
 
 export function hasGroqKey() {
