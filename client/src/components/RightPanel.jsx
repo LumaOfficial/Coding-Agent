@@ -189,12 +189,12 @@ export default function RightPanel({
             statusText={
               github?.connected
                 ? `Signed in as ${github.login}`
-                : github?.error || 'Not connected'
+                : github?.error || 'Public read only'
             }
-            description="Lets the agent browse repos, commit files to branches and open pull requests on your behalf."
+            description="Browses and reads public repos with no token. Add a token to commit to branches and open pull requests."
             steps={[
-              'Create a fine-grained or classic token with repo scope',
-              'Add it as GITHUB_TOKEN in the secrets panel',
+              'Optional: create a fine-grained or classic token with repo scope',
+              'Add it as GITHUB_TOKEN to unlock commits and pull requests',
             ]}
             action={
               <a

@@ -95,7 +95,7 @@ export default function Sidebar({
             <StatusDot ok={github} />
             <span>GitHub</span>
             <span className="status-value">
-              {github ? integrations.github.login : 'not linked'}
+              {github ? integrations.github.login : 'read only'}
             </span>
           </div>
           <div className="status-row">

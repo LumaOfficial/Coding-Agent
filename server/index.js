@@ -31,7 +31,7 @@ app.get('/api/models', (req, res) => {
 let integrationCache = { at: 0, data: null };
 
 async function probeGitHub() {
-  if (!process.env.GITHUB_TOKEN) return { connected: false };
+  if (!process.env.GITHUB_TOKEN) return { connected: false, readOnly: true };
   try {
     const res = await fetch('https://api.github.com/user', {
       headers: {

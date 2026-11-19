@@ -5,17 +5,18 @@ function token() {
 }
 
 async function gh(path, { method = 'GET', body } = {}) {
-  if (!token()) {
+  const auth = token();
+  if (!auth && method !== 'GET') {
     throw new Error(
-      'GITHUB_TOKEN is not configured. Add a personal access token with repo scope in the Integrations panel.'
+      'This action writes to GitHub and needs GITHUB_TOKEN. Browsing public repos works without a token.'
     );
   }
   const res = await fetch(`${API}${path}`, {
     method,
     headers: {
       Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${token()}`,
       'X-GitHub-Api-Version': '2022-11-28',
+      ...(auth ? { Authorization: `Bearer ${auth}` } : {}),
       ...(body ? { 'Content-Type': 'application/json' } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -28,6 +29,11 @@ async function gh(path, { method = 'GET', body } = {}) {
     data = { raw: text };
   }
   if (!res.ok) {
+    if (res.status === 403 && !auth) {
+      throw new Error(
+        'GitHub anonymous rate limit reached (60 requests/hour). Add GITHUB_TOKEN for a higher limit.'
+      );
+    }
     throw new Error(`GitHub ${res.status}: ${data.message || text.slice(0, 300)}`);
   }
   return data;
