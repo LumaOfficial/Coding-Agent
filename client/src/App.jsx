@@ -17,7 +17,7 @@ export default function App() {
   const [liveText, setLiveText] = useState('');
   const [liveTools, setLiveTools] = useState([]);
   const [error, setError] = useState('');
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState('files');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

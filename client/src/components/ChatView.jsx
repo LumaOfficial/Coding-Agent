@@ -250,7 +250,7 @@ export default function ChatView({
       <div className="composer-wrap">
         <Composer onSend={onSend} streaming={streaming} onStop={onStop} />
         <div className="composer-hint">
-          Files land in the workspace panel — export them as a ZIP to open in VS Code.
+          Files land in the workspace — export a ZIP for VS Code.
         </div>
       </div>
     </div>
