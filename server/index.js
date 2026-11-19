@@ -16,6 +16,7 @@ import {
 } from './store.js';
 import { runAgent } from './agent.js';
 import { MODELS, hasGroqKey } from './groq.js';
+import { detectPlatform } from './platform.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
@@ -26,6 +27,10 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.get('/api/models', (req, res) => {
   res.json({ models: MODELS, default: MODELS[0].id, groqConfigured: hasGroqKey() });
+});
+
+app.get('/api/platform', (req, res) => {
+  res.json(detectPlatform(req.headers));
 });
 
 let integrationCache = { at: 0, data: null };
