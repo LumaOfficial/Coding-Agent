@@ -1,12 +1,16 @@
-# Forge — Groq coding agent
+# Forge — local coding agent
 
-A chat IDE where an LLM agent writes real code for you and acts on the tools you use.
+A chat IDE whose agent repairs and debugs code for you, with no model calls and no API key.
 
-- **Groq** — every reply and tool call runs on a Groq-hosted model (`llama-3.3-70b-versatile` by default).
-- **Workspace** — the agent writes files into a per-session workspace you can browse and export as a ZIP.
+- **Local engine** — deterministic repair and debugging: syntax errors, invalid JSON, missing
+  imports, unbalanced braces, unclosed tags, line endings, whitespace, tabs, trailing commas,
+  `debugger` statements and final newlines. Nothing leaves the machine.
+- **Workspace** — files live in a per-session workspace you can browse and export as a ZIP.
 - **GitHub** — search repos, list directories, read files, create branches, commit and open pull requests.
 - **Hugging Face** — search models, datasets and spaces, and read model cards.
 - **VS Code** — `generate_vscode_workspace` adds a `.code-workspace`, `.vscode/settings.json` and `tasks.json`; export the ZIP and open the folder.
+- **Platform detection** — `GET /api/platform` reports the OS, container, runtime, shell, editor,
+  CI, git repo and installed tools of the machine the agent runs on.
 
 ## Run locally
 
@@ -17,19 +21,24 @@ cd client && npm install && npm run dev   # UI on :5173, proxies /api
 
 ## Credentials
 
-Set these in the app's secrets (delivered as env vars):
+No key is required. The engine is local; `GROQ_API_KEY` is not read anywhere.
 
 | Key | Required | Purpose |
 | --- | --- | --- |
-| `GROQ_API_KEY` | yes | Model inference for the agent |
 | `GITHUB_TOKEN` | for GitHub tools | Repo read/commit/PR, `repo` scope |
 | `HF_TOKEN` | no | Private Hugging Face repos, higher rate limits |
 
 The UI runs without them and shows what is not connected.
 
+## Endpoints
+
+- `POST /api/sessions/:id/chat` — SSE turn: runs the local engine and streams the report.
+- `POST /api/sessions/:id/autofix` — repairs the workspace and returns the findings as JSON.
+- `GET /api/platform` — environment detection.
+
 ## Layout
 
 ```
-server/   Express + SSE agent loop, tool registry, JSON/file session store
+server/   Express + SSE turn loop, autofix engine, tool registry, JSON/file session store
 client/   Vite + React chat UI, workspace panel, integrations panel
 ```

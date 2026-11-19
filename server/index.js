@@ -14,8 +14,8 @@ import {
   readWorkspaceFile,
   workspaceDir,
 } from './store.js';
-import { runAgent } from './agent.js';
-import { MODELS, hasGroqKey } from './groq.js';
+import { runAgent, LOCAL_MODEL } from './agent.js';
+import { fixWorkspace } from './autofix.js';
 import { detectPlatform } from './platform.js';
 
 const app = express();
@@ -26,7 +26,7 @@ app.use(express.json({ limit: '8mb' }));
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.get('/api/models', (req, res) => {
-  res.json({ models: MODELS, default: MODELS[0].id, groqConfigured: hasGroqKey() });
+  res.json({ models: [LOCAL_MODEL], default: LOCAL_MODEL.id, mode: 'local' });
 });
 
 app.get('/api/platform', (req, res) => {
@@ -72,7 +72,7 @@ app.get('/api/integrations', async (req, res) => {
   }
   const [github, huggingface] = await Promise.all([probeGitHub(), probeHuggingFace()]);
   const data = {
-    groq: { connected: hasGroqKey() },
+    engine: { mode: 'local', connected: true },
     github,
     huggingface,
   };
@@ -87,7 +87,7 @@ app.get('/api/sessions', async (req, res) => {
 app.post('/api/sessions', async (req, res) => {
   const session = await createSession({
     title: req.body?.title || 'New session',
-    model: req.body?.model || MODELS[0].id,
+    model: LOCAL_MODEL.id,
   });
   res.status(201).json({ session });
 });
@@ -156,7 +156,7 @@ app.post('/api/sessions/:id/chat', async (req, res) => {
   if (!session) return res.status(404).json({ error: 'Session not found' });
 
   const message = String(req.body?.message || '').trim();
-  const model = req.body?.model || session.model;
+  const model = LOCAL_MODEL.id;
   if (!message) return res.status(400).json({ error: 'Message is required' });
 
   res.writeHead(200, {
@@ -185,12 +185,7 @@ app.post('/api/sessions/:id/chat', async (req, res) => {
 
     emit({ type: 'user_saved', message });
 
-    await runAgent({
-      sessionId: req.params.id,
-      model,
-      signal: controller.signal,
-      emit,
-    });
+    await runAgent({ sessionId: req.params.id, emit });
   } catch (error) {
     if (error.name !== 'AbortError') {
       emit({ type: 'error', message: error.message || 'Agent failed' });
@@ -200,8 +195,18 @@ app.post('/api/sessions/:id/chat', async (req, res) => {
   }
 });
 
+app.post('/api/sessions/:id/autofix', async (req, res) => {
+  const session = await getSession(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  try {
+    res.json(await fixWorkspace(req.params.id));
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Auto-fix failed' });
+  }
+});
+
 await init();
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Forge API listening on http://0.0.0.0:${PORT}`);
-  console.log(`Groq key: ${hasGroqKey() ? 'configured' : 'MISSING'}`);
+  console.log('Engine: local auto-fix (Groq disabled)');
 });

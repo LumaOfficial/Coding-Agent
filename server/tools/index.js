@@ -3,8 +3,9 @@ import * as github from './github.js';
 import * as huggingface from './huggingface.js';
 import * as vscode from './vscode.js';
 import * as platform from './platform.js';
+import * as autofix from './autofix.js';
 
-const modules = [workspace, github, huggingface, vscode, platform];
+const modules = [workspace, github, huggingface, vscode, platform, autofix];
 
 export const toolDefinitions = modules.flatMap((m) => m.definitions);
 

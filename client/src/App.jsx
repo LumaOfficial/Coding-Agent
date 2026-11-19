@@ -10,8 +10,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [models, setModels] = useState([]);
-  const [model, setModel] = useState('openai/gpt-oss-120b');
-  const [groqConfigured, setGroqConfigured] = useState(true);
+  const [model, setModel] = useState('local/autofix');
   const [integrations, setIntegrations] = useState(null);
   const [streaming, setStreaming] = useState(false);
   const [liveText, setLiveText] = useState('');
@@ -36,7 +35,6 @@ export default function App() {
       setSession(data.session);
       setMessages(data.messages);
       setFiles(data.files);
-      if (data.session.model) setModel(data.session.model);
     } catch (err) {
       setError(err.message);
     }
@@ -59,7 +57,6 @@ export default function App() {
         if (cancelled) return;
         setModels(m.models);
         setModel(m.default);
-        setGroqConfigured(m.groqConfigured);
         setIntegrations(integ);
         setSessions(s.sessions);
         if (s.sessions.length) await openSession(s.sessions[0].id);
@@ -224,12 +221,7 @@ export default function App() {
           error={error}
           panelOpen={panelOpen}
           onTogglePanel={() => setPanelOpen((v) => !v)}
-          onOpenPanel={(tab) => {
-            setPanelTab(tab);
-            setPanelOpen(true);
-          }}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
-          groqConfigured={groqConfigured}
         />
       </main>
 

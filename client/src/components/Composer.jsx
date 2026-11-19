@@ -25,7 +25,7 @@ export default function Composer({ onSend, streaming, onStop }) {
         ref={ref}
         rows={1}
         value={value}
-        placeholder="Ask Forge to build, refactor, or ship something…"
+        placeholder="Paste code or ask Forge to fix your workspace…"
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {

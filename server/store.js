@@ -46,7 +46,7 @@ export async function listSessions() {
     .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
 }
 
-export async function createSession({ title = 'New session', model = 'openai/gpt-oss-120b' } = {}) {
+export async function createSession({ title = 'New session', model = 'local/autofix' } = {}) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   const meta = { id, title, model, created_at: now, updated_at: now };

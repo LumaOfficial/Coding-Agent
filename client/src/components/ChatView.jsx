@@ -14,27 +14,24 @@ import {
 const SUGGESTIONS = [
   {
     icon: <IconSpark width={14} height={14} />,
-    title: 'Build a full app',
-    prompt:
-      'Build a Next.js dashboard for tracking freelance invoices with a sidebar, charts and a create-invoice form. Write every file to the workspace.',
+    title: 'Fix my workspace',
+    prompt: 'Fix the code in my workspace and debug it.',
   },
   {
-    icon: <IconGithub width={14} height={14} />,
-    title: 'Work on a GitHub repo',
-    prompt:
-      'List the files in the root of my GitHub repo and review the README, then suggest improvements.',
-  },
-  {
-    icon: <IconSpark width={14} height={14} />,
-    title: 'Pick a Hugging Face model',
-    prompt:
-      'Search Hugging Face for small instruction-tuned models that run on a laptop, compare the top 3 and recommend one.',
+    icon: <IconAlert width={14} height={14} />,
+    title: 'Debug everything',
+    prompt: 'Debug my workspace and show every syntax error and missing import with file and line.',
   },
   {
     icon: <IconTerminal width={14} height={14} />,
-    title: 'Scaffold + VS Code',
+    title: 'Check a snippet',
     prompt:
-      'Scaffold a FastAPI service with one /health route and a test, then add VS Code workspace files so I can open it locally.',
+      'Check this snippet and fix it:\n\n```js\nfunction add(a, b) {\n  return a + b\n}\n\nconst total = add(1, 2;\n```',
+  },
+  {
+    icon: <IconGithub width={14} height={14} />,
+    title: 'Detect my platform',
+    prompt: 'What coding platform am I on?',
   },
 ];
 
@@ -122,11 +119,11 @@ function EmptyState({ onPick }) {
         <IconSpark width={22} height={22} />
       </div>
       <h1 className="empty-title">
-        Build with <span className="grad">Forge</span>
+        Fix with <span className="grad">Forge</span>
       </h1>
       <p className="empty-sub">
-        A Groq-powered coding agent. It writes real files into a workspace, commits to GitHub,
-        finds Hugging Face models, and packages everything for VS Code.
+        A local coding agent that repairs and debugs your files — syntax errors, broken JSON,
+        missing imports, formatting — with no API key and no model calls.
       </p>
       <div className="suggestions">
         {SUGGESTIONS.map((s) => (
@@ -155,9 +152,7 @@ export default function ChatView({
   error,
   panelOpen,
   onTogglePanel,
-  onOpenPanel,
   onToggleSidebar,
-  groqConfigured,
 }) {
   const scrollRef = useRef(null);
 
@@ -178,15 +173,24 @@ export default function ChatView({
         <div className="chat-title">
           <span className="chat-title-text">{session?.title || 'New session'}</span>
           <span className="chat-sub">
-            {streaming ? 'working…' : activeModel ? activeModel.label : 'Groq'}
+            {streaming ? 'working…' : activeModel ? activeModel.label : 'Local'}
           </span>
         </div>
         <div className="chat-actions">
+          <button
+            className="fix-btn"
+            onClick={() => onSend('Fix the code in my workspace and debug it.')}
+            disabled={streaming}
+            title="Run the local auto-fixer"
+          >
+            <IconTerminal width={13} height={13} />
+            Fix code
+          </button>
           <select
             className="model-select"
             value={model}
             onChange={(e) => onModelChange(e.target.value)}
-            title="Groq model"
+            title="Engine"
           >
             {models.map((m) => (
               <option key={m.id} value={m.id}>
@@ -203,18 +207,6 @@ export default function ChatView({
           </button>
         </div>
       </header>
-
-      {!groqConfigured && (
-        <div className="banner">
-          <IconAlert width={14} height={14} />
-          <span>
-            No Groq key yet — add <code>GROQ_API_KEY</code> and the agent comes online.
-          </span>
-          <button className="banner-link" onClick={() => onOpenPanel('integrations')}>
-            Open integrations
-          </button>
-        </div>
-      )}
 
       <div className="chat-scroll" ref={scrollRef}>
         <div className="chat-inner">

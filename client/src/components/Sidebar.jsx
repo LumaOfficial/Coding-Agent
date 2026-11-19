@@ -29,7 +29,6 @@ export default function Sidebar({
 }) {
   const github = integrations?.github?.connected;
   const hf = integrations?.huggingface?.connected;
-  const groq = integrations?.groq?.connected;
 
   return (
     <>
@@ -41,7 +40,7 @@ export default function Sidebar({
           </div>
           <div>
             <div className="brand-name">Forge</div>
-            <div className="brand-sub">Groq coding agent</div>
+            <div className="brand-sub">Local auto-fix agent</div>
           </div>
         </div>
 
@@ -87,9 +86,9 @@ export default function Sidebar({
 
         <div className="sidebar-footer">
           <div className="status-row">
-            <StatusDot ok={groq} />
-            <span>Groq</span>
-            <span className="status-value">{groq ? 'connected' : 'no key'}</span>
+            <StatusDot ok />
+            <span>Engine</span>
+            <span className="status-value">local · no key</span>
           </div>
           <div className="status-row">
             <StatusDot ok={github} />

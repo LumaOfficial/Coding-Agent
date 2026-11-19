@@ -11,6 +11,12 @@ export function toolSummary(name, args = {}) {
       return `Delete ${args.path || 'file'}`;
     case 'list_files':
       return 'List workspace files';
+    case 'autofix_workspace':
+      return 'Auto-fix workspace';
+    case 'check_code':
+      return `Check ${args.path || 'snippet'}`;
+    case 'detect_platform':
+      return 'Detect platform';
     case 'github_search_repos':
       return `Search GitHub · ${args.query || ''}`;
     case 'github_list_dir':
@@ -42,6 +48,10 @@ function ToolIcon({ name }) {
   if (name.startsWith('github_')) return <IconGithub width={13} height={13} />;
   if (name.startsWith('hf_')) return <IconSpark width={13} height={13} />;
   if (name === 'generate_vscode_workspace') return <IconTerminal width={13} height={13} />;
+  if (name === 'autofix_workspace' || name === 'check_code') {
+    return <IconTerminal width={13} height={13} />;
+  }
+  if (name === 'detect_platform') return <IconSpark width={13} height={13} />;
   return <IconFile width={13} height={13} />;
 }
 
