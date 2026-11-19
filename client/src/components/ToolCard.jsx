@@ -17,6 +17,12 @@ export function toolSummary(name, args = {}) {
       return `Check ${args.path || 'snippet'}`;
     case 'detect_platform':
       return 'Detect platform';
+    case 'list_store_targets':
+      return 'List store targets';
+    case 'test_store_readiness':
+      return args.targets?.length
+        ? `Store readiness · ${args.targets.join(', ')}`
+        : 'Store readiness · all stores';
     case 'github_search_repos':
       return `Search GitHub · ${args.query || ''}`;
     case 'github_list_dir':

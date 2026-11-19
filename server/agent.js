@@ -1,5 +1,6 @@
 import { getMessages, addMessage, getSession } from './store.js';
 import { executeTool } from './tools/index.js';
+import { detectTargets } from './stores.js';
 
 /**
  * Local agent. Runs entirely on this machine — no model, no external API,
@@ -22,8 +23,9 @@ I repair and debug code with deterministic checks:
 - **Paste a snippet** — send a fenced code block and I return the corrected code plus any remaining problems.
 - **List files** — shows what is in the workspace.
 - **Detect my platform** — reports the OS, container, runtime and installed tools.
+- **Test store readiness** — checks the workspace against Chrome Web Store, Edge Add-ons, Mozilla Add-ons, Opera Add-ons, Google Play, Apple App Store, VS Code Marketplace and Hugging Face Spaces, and lists exactly what each one is missing.
 
-Say "fix my code" to start.`;
+Say "fix my code" or "test my store readiness" to start.`;
 
 const EXT_BY_LANG = {
   js: 'js',
@@ -54,6 +56,13 @@ function extractCodeBlock(text) {
 function classify(text, snippet) {
   const lower = text.toLowerCase();
   if (snippet) return 'snippet';
+
+  const storeWords =
+    /\b(store|stores|marketplace|marketplaces|add-?ons?|listing|readiness|submission|publish|tests?)\b/;
+  const storeNames =
+    /chrome web|play store|app store|google play|mozilla|firefox|opera|edge add|vs ?code|hugging ?face/;
+  if (storeWords.test(lower) || storeNames.test(lower)) return 'stores';
+
   if (/\b(fix|repair|autofix|auto-fix|debug|lint|check|errors?|broken|syntax|not working)\b/.test(lower)) {
     return 'fix';
   }
@@ -128,6 +137,39 @@ function summarizePlatform(data) {
   ].join('\n');
 }
 
+function summarizeStores(data) {
+  const targets = data.targets || [];
+  if (!targets.length) return 'No store targets selected.';
+  const lines = [
+    `**Store readiness — ${data.workspace_files} file${data.workspace_files === 1 ? '' : 's'} scanned**`,
+    '',
+  ];
+
+  for (const target of targets) {
+    const mark = target.status === 'ready' ? '✅' : target.status === 'needs-work' ? '⚠️' : '❌';
+    lines.push(
+      `${mark} **${target.name}** — ${target.score}/100 · ${target.counts.fail} missing · ${target.counts.warn} warning${
+        target.counts.warn === 1 ? '' : 's'
+      }`
+    );
+    const items = target.checks.filter((item) => item.status !== 'pass').slice(0, 8);
+    for (const item of items) {
+      lines.push(
+        `- ${item.status === 'fail' ? '**Missing**' : 'Warn'} — ${item.label}${
+          item.detail ? `: ${item.detail}` : ''
+        }`
+      );
+    }
+    if (!items.length) lines.push('- Nothing missing.');
+    lines.push('');
+  }
+
+  lines.push(
+    `**Totals** · ${data.totals.ready} ready · ${data.totals.blocked} blocked · ${data.totals.fails} missing item${data.totals.fails === 1 ? '' : 's'}`
+  );
+  return lines.join('\n');
+}
+
 function summarizeFiles(data) {
   const files = data.files || [];
   if (!files.length) return '**Workspace is empty.** Paste a code block to check it, or ask me to fix the workspace.';
@@ -151,7 +193,11 @@ export async function runAgent({ sessionId, emit }) {
 
   let toolName = null;
   let args = {};
-  if (intent === 'fix') {
+  if (intent === 'stores') {
+    toolName = 'test_store_readiness';
+    const targets = detectTargets(text);
+    if (targets) args = { targets };
+  } else if (intent === 'fix') {
     toolName = 'autofix_workspace';
   } else if (intent === 'snippet') {
     toolName = 'check_code';
@@ -198,6 +244,7 @@ export async function runAgent({ sessionId, emit }) {
       data = null;
     }
     if (toolName === 'autofix_workspace' && data) summary = summarizeWorkspaceFix(data);
+    else if (toolName === 'test_store_readiness' && data) summary = summarizeStores(data);
     else if (toolName === 'check_code' && data) summary = summarizeSnippet(data);
     else if (toolName === 'detect_platform' && data) summary = summarizePlatform(data);
     else if (toolName === 'list_files' && data) summary = summarizeFiles(data);

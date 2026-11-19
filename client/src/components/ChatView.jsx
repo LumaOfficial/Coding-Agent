@@ -4,6 +4,7 @@ import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
 import {
   IconAlert,
+  IconFile,
   IconGithub,
   IconMenu,
   IconPanel,
@@ -32,6 +33,12 @@ const SUGGESTIONS = [
     icon: <IconGithub width={14} height={14} />,
     title: 'Detect my platform',
     prompt: 'What coding platform am I on?',
+  },
+  {
+    icon: <IconFile width={14} height={14} />,
+    title: 'Test store readiness',
+    prompt:
+      'Run store readiness tests on my workspace for the Chrome Web Store, Google Play, the Apple App Store and Firefox Add-ons, and show what is missing.',
   },
 ];
 
@@ -122,8 +129,8 @@ function EmptyState({ onPick }) {
         Fix with <span className="grad">Forge</span>
       </h1>
       <p className="empty-sub">
-        A local coding agent that repairs and debugs your files — syntax errors, broken JSON,
-        missing imports, formatting — with no API key and no model calls.
+        A local coding agent that repairs and debugs your files, then tests them against app
+        stores — with no API key and no model calls.
       </p>
       <div className="suggestions">
         {SUGGESTIONS.map((s) => (
@@ -153,6 +160,7 @@ export default function ChatView({
   panelOpen,
   onTogglePanel,
   onToggleSidebar,
+  onOpenStoreTests,
 }) {
   const scrollRef = useRef(null);
 
@@ -185,6 +193,14 @@ export default function ChatView({
           >
             <IconTerminal width={13} height={13} />
             Fix code
+          </button>
+          <button
+            className="fix-btn ghost"
+            onClick={onOpenStoreTests}
+            title="Test the workspace against app stores"
+          >
+            <IconFile width={13} height={13} />
+            Store tests
           </button>
           <select
             className="model-select"

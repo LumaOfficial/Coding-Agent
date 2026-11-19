@@ -11,6 +11,11 @@ A chat IDE whose agent repairs and debugs code for you, with no model calls and 
 - **VS Code** — `generate_vscode_workspace` adds a `.code-workspace`, `.vscode/settings.json` and `tasks.json`; export the ZIP and open the folder.
 - **Platform detection** — `GET /api/platform` reports the OS, container, runtime, shell, editor,
   CI, git repo and installed tools of the machine the agent runs on.
+- **Store readiness tests** — `test_store_readiness` runs local checks against Chrome Web Store,
+  Microsoft Edge Add-ons, Mozilla Add-ons, Opera Add-ons, Google Play, Apple App Store, VS Code
+  Marketplace and Hugging Face Spaces, and lists exactly what each one is missing (manifest fields,
+  icons, target SDK, signing, privacy policy/manifest, listing screenshots). The **Stores** tab in
+  the panel shows the same report.
 
 ## Run locally
 
@@ -34,6 +39,9 @@ The UI runs without them and shows what is not connected.
 
 - `POST /api/sessions/:id/chat` — SSE turn: runs the local engine and streams the report.
 - `POST /api/sessions/:id/autofix` — repairs the workspace and returns the findings as JSON.
+- `POST /api/sessions/:id/store-tests` — runs the store readiness checks (`targets` optional) and
+  returns the per-store report as JSON.
+- `GET /api/stores` — the store catalog the tests cover.
 - `GET /api/platform` — environment detection.
 
 ## Layout

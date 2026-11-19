@@ -222,6 +222,10 @@ export default function App() {
           panelOpen={panelOpen}
           onTogglePanel={() => setPanelOpen((v) => !v)}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          onOpenStoreTests={() => {
+            setPanelTab('stores');
+            setPanelOpen(true);
+          }}
         />
       </main>
 

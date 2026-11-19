@@ -10,6 +10,7 @@ import {
   IconSpark,
   IconTerminal,
 } from './Icons.jsx';
+import StoreTests from './StoreTests.jsx';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -98,6 +99,12 @@ export default function RightPanel({
           >
             Integrations
           </button>
+          <button
+            className={`tab ${tab === 'stores' ? 'active' : ''}`}
+            onClick={() => setTab('stores')}
+          >
+            Stores
+          </button>
         </div>
         <button className="icon-btn" onClick={onClose} title="Close panel">
           <IconClose width={15} height={15} />
@@ -150,7 +157,7 @@ export default function RightPanel({
             </div>
           )}
         </div>
-      ) : (
+      ) : tab === 'integrations' ? (
         <div className="panel-body">
           <div className="files-toolbar">
             <span className="files-count">Connections</span>
@@ -241,6 +248,10 @@ export default function RightPanel({
               <span className="muted-note">No files to export yet.</span>
             )}
           </div>
+        </div>
+      ) : (
+        <div className="panel-body">
+          <StoreTests session={session} files={files} />
         </div>
       )}
 

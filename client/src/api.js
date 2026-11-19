@@ -24,6 +24,9 @@ export const api = {
   deleteSession: (id) => request(`/api/sessions/${id}`, { method: 'DELETE' }),
   workspace: (id) => request(`/api/sessions/${id}/workspace`),
   file: (id, path) => request(`/api/sessions/${id}/file?path=${encodeURIComponent(path)}`),
+  stores: () => request('/api/stores'),
+  storeTests: (id, targets) =>
+    request(`/api/sessions/${id}/store-tests`, { method: 'POST', body: { targets } }),
 };
 
 export async function streamChat({ sessionId, message, model, signal, onEvent }) {
