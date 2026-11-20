@@ -7,7 +7,14 @@ via Cloudflare Workers AI — it is the only model the app offers.
 - **Model** — Gemma 4 calls the tool registry; there is no model picker beyond it and no other
   provider. Without Cloudflare credentials the chat reports what is missing.
 - **Tools in one menu** — Fix workspace, Debug, Check a snippet, Workspace files, Store readiness,
-  GitHub, Hugging Face, Detect platform and VS Code files all live in the **Tools** menu.
+  Search the web, GitHub, Hugging Face, Detect platform and VS Code files all live in the **Tools** menu.
+- **Its own browser** — `web_search` queries the live web (Bing, then DuckDuckGo instant answers,
+  then Wikipedia) and `web_fetch` opens a public page and returns its readable text. No API key,
+  no user tab; private/local addresses are refused.
+- **Full browser window** — on a wide viewport the app fills the screen and docks the session
+  sidebar and workspace panel as real columns; in a narrow extension panel it falls back to the
+  single-column drawer layout. Idle for a while and Forge drifts off — little Z's, then a snoring
+  bubble — until you type again.
 - **Always-on scan** — every session open and every turn ends with an automatic scan of the
   workspace. Safe edits are applied by default (toggle **Auto** off to review first); anything
   ambiguous is listed as a suggested edit with file and line. The scan and the `autofix_workspace`

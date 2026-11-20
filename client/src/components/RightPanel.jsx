@@ -10,6 +10,7 @@ import {
 } from './Icons.jsx';
 import StoreTests from './StoreTests.jsx';
 import Platforms from './Platforms.jsx';
+import PlatformCard from './PlatformCard.jsx';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -181,6 +182,7 @@ export default function RightPanel({
             ]}
           />
 
+          <PlatformCard />
           <Platforms />
         </div>
       ) : (

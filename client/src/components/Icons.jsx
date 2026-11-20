@@ -108,3 +108,16 @@ export const IconAlert = (p) => (
     <circle cx="12" cy="12" r="9" />
   </svg>
 );
+
+export const IconGlobe = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3c2.4 2.6 3.6 5.7 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.7-3.6-9S9.6 5.6 12 3z" />
+  </svg>
+);
+
+export const IconMoon = (p) => (
+  <svg {...base} {...p}>
+    <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.6 6.6 0 0 0 10.5 10.5z" />
+  </svg>
+);

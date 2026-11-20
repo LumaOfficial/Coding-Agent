@@ -6,6 +6,7 @@ import {
   IconDownload,
   IconFile,
   IconGithub,
+  IconGlobe,
   IconPanel,
   IconSpark,
   IconTerminal,
@@ -52,6 +53,14 @@ const TOOLS = [
     hint: 'Test against app stores',
     icon: IconCheck,
     stores: true,
+  },
+  {
+    id: 'web',
+    label: 'Search the web',
+    hint: 'Look it up and read the page',
+    icon: IconGlobe,
+    prompt:
+      'Search the web for the latest Cloudflare Workers AI limits and pricing, read the docs page, and summarize what matters.',
   },
   {
     id: 'github',

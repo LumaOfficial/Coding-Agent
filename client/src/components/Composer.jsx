@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { IconSend, IconStop } from './Icons.jsx';
 
-export default function Composer({ onSend, streaming, onStop }) {
+export default function Composer({ onSend, streaming, onStop, napping = false }) {
   const [value, setValue] = useState('');
   const ref = useRef(null);
 
@@ -20,12 +20,16 @@ export default function Composer({ onSend, streaming, onStop }) {
   }
 
   return (
-    <div className="composer">
+    <div className={`composer ${napping ? 'napping' : ''}`}>
       <textarea
         ref={ref}
         rows={1}
         value={value}
-        placeholder="Paste code or ask Forge to fix your workspace…"
+        placeholder={
+          napping
+            ? 'Forge is napping… type to wake it up'
+            : 'Paste code or ask Forge to fix your workspace…'
+        }
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {

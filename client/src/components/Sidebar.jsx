@@ -26,11 +26,14 @@ export default function Sidebar({
   integrations,
   open,
   onClose,
+  idle = 'awake',
 }) {
   const github = integrations?.github;
   const hf = integrations?.huggingface;
+  const engine = integrations?.engine;
   const githubOk = github?.connected || github?.ok;
   const hfOk = hf?.connected || hf?.ok;
+  const engineOk = Boolean(engine?.connected);
 
   return (
     <>
@@ -42,7 +45,13 @@ export default function Sidebar({
           </div>
           <div>
             <div className="brand-name">Forge</div>
-            <div className="brand-sub">Local auto-fix agent</div>
+            <div className="brand-sub">
+              {idle === 'awake'
+                ? 'Local auto-fix agent'
+                : idle === 'asleep'
+                  ? 'snoring softly · zzz'
+                  : 'resting · zzz'}
+            </div>
           </div>
         </div>
 
@@ -91,9 +100,18 @@ export default function Sidebar({
 
         <div className="sidebar-footer">
           <div className="status-row">
-            <StatusDot ok />
+            <StatusDot ok={engineOk} />
             <span>Engine</span>
-            <span className="status-value">local · no key</span>
+            <span className="status-value">
+              {engineOk
+                ? 'Cloudflare · Gemma 4'
+                : `Cloudflare · ${engine?.missing?.length ? 'add key' : 'offline'}`}
+            </span>
+          </div>
+          <div className="status-row">
+            <StatusDot ok />
+            <span>Web</span>
+            <span className="status-value">own browser · online</span>
           </div>
           <div className="status-row">
             <StatusDot ok={githubOk} />

@@ -3,8 +3,12 @@ import { api, streamChat } from './api.js';
 import Sidebar from './components/Sidebar.jsx';
 import ChatView from './components/ChatView.jsx';
 import RightPanel from './components/RightPanel.jsx';
+import Ambient from './components/Ambient.jsx';
+import useIdle from './lib/useIdle.js';
+import useBrowserLayout from './lib/useBrowserLayout.js';
 
 export default function App() {
+  const full = useBrowserLayout();
   const [sessions, setSessions] = useState([]);
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -13,6 +17,7 @@ export default function App() {
   const [model, setModel] = useState('cloudflare/gemma-4-26b-a4b-it');
   const [integrations, setIntegrations] = useState(null);
   const [streaming, setStreaming] = useState(false);
+  const idle = useIdle({ enabled: !streaming });
   const [liveText, setLiveText] = useState('');
   const [liveTools, setLiveTools] = useState([]);
   const [error, setError] = useState('');
@@ -264,7 +269,8 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${full ? 'full' : ''} ${idle !== 'awake' ? idle : ''}`}>
+      <Ambient level={idle} />
       <Sidebar
         sessions={sessions}
         activeId={session?.id}
@@ -274,6 +280,7 @@ export default function App() {
         integrations={integrations}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        idle={idle}
       />
 
       <main className="main">
@@ -305,6 +312,7 @@ export default function App() {
             setPanelTab(tab);
             setPanelOpen(true);
           }}
+          idle={idle}
         />
       </main>
 

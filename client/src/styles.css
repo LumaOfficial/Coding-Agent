@@ -113,6 +113,15 @@ button {
   box-shadow: -40px 0 120px rgba(0, 0, 0, 0.6);
 }
 
+/* Wide viewport → a real browser window: fill the screen, dock the columns. */
+.app.full {
+  width: 100%;
+  margin-left: 0;
+  border-left: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
 .main {
   flex: 1;
   min-width: 0;
@@ -143,6 +152,28 @@ button {
 
 .sidebar.open {
   transform: none;
+}
+
+/* Full browser layout: the sidebar is a real column that pushes the chat. */
+.app.full .sidebar {
+  position: relative;
+  flex: 0 0 auto;
+  width: 268px;
+  max-width: 268px;
+  transform: none;
+  margin-left: -269px;
+  border-right: 0;
+  box-shadow: none;
+  transition: margin-left 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.app.full .sidebar.open {
+  margin-left: 0;
+  border-right: 1px solid var(--border);
+}
+
+.app.full .drawer-backdrop {
+  display: none;
 }
 
 .drawer-backdrop {
@@ -549,7 +580,8 @@ button {
 .tools-menu {
   position: absolute;
   top: calc(100% + 6px);
-  right: 0;
+  left: 0;
+  right: auto;
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -567,7 +599,8 @@ button {
 .tools-inline .tools-menu {
   left: 50%;
   right: auto;
-  transform: translateX(-50%);
+  translate: -50% 0;
+  transform-origin: top center;
 }
 
 .tools-item {
@@ -1494,6 +1527,52 @@ button {
   }
 }
 
+/* Full browser layout: the workspace panel is a docked third column. */
+.app.full .panel {
+  position: relative;
+  flex: 0 0 clamp(280px, 32vw, 380px);
+  width: clamp(280px, 32vw, 380px);
+  border-left: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.app.full .panel .tab {
+  padding: 6px 4px;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.tab span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Too narrow for three columns: the workspace panel slides over the chat. */
+@media (max-width: 899px) {
+  .app.full .panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    flex: 0 0 auto;
+    width: min(380px, 92%);
+    box-shadow: -30px 0 80px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.app.full .chat-inner {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.app.full .composer-wrap > * {
+  width: 100%;
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .panel-head {
   display: flex;
   align-items: center;
@@ -1752,6 +1831,30 @@ button {
 .muted-note {
   font-size: 11.3px;
   color: var(--muted);
+}
+
+.platform-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.fact-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px;
+  font-size: 11.3px;
+  line-height: 1.45;
+}
+
+.fact-label {
+  color: var(--muted);
+}
+
+.fact-value {
+  color: var(--text-dim);
+  word-break: break-word;
 }
 
 /* ---------------- platform catalog ---------------- */

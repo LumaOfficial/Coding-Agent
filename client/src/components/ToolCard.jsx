@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconChevron, IconFile, IconGithub, IconSpark, IconTerminal } from './Icons.jsx';
+import { IconChevron, IconFile, IconGithub, IconGlobe, IconSpark, IconTerminal } from './Icons.jsx';
 
 export function toolSummary(name, args = {}) {
   switch (name) {
@@ -17,6 +17,10 @@ export function toolSummary(name, args = {}) {
       return `Check ${args.path || 'snippet'}`;
     case 'detect_platform':
       return 'Detect platform';
+    case 'web_search':
+      return `Web search · ${args.query || ''}`;
+    case 'web_fetch':
+      return `Open page · ${args.url || ''}`;
     case 'list_store_targets':
       return 'List store targets';
     case 'test_store_readiness':
@@ -58,6 +62,7 @@ function ToolIcon({ name }) {
     return <IconTerminal width={13} height={13} />;
   }
   if (name === 'detect_platform') return <IconSpark width={13} height={13} />;
+  if (name.startsWith('web_')) return <IconGlobe width={13} height={13} />;
   return <IconFile width={13} height={13} />;
 }
 

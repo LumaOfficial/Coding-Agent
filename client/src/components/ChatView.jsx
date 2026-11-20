@@ -4,7 +4,7 @@ import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
 import ScanCard from './ScanCard.jsx';
 import ToolsMenu from './ToolsMenu.jsx';
-import { IconAlert, IconMenu, IconPanel, IconSpark } from './Icons.jsx';
+import { IconAlert, IconMenu, IconMoon, IconPanel, IconSpark } from './Icons.jsx';
 
 function buildTimeline(messages) {
   const results = new Map();
@@ -42,17 +42,18 @@ function safeArgs(raw) {
   }
 }
 
-function Turn({ role, content, cards = [], streaming = false }) {
+function Turn({ role, content, cards = [], streaming = false, index = 0 }) {
   if (role === 'user') {
     return (
-      <div className="turn turn-user">
+      <div className="turn turn-user" style={{ '--turn-index': index }}>
         <div className="turn-tag">You</div>
         <div className="turn-user-body">{content}</div>
       </div>
     );
   }
+  const running = cards.some((card) => card.status === 'running');
   return (
-    <div className="turn turn-assistant">
+    <div className="turn turn-assistant" style={{ '--turn-index': index }}>
       <div className="turn-head">
         <span className="avatar">
           <IconSpark width={13} height={13} />
@@ -61,6 +62,11 @@ function Turn({ role, content, cards = [], streaming = false }) {
       </div>
       <div className="turn-body">
         {content ? <Markdown>{content}</Markdown> : null}
+        {streaming && !content && cards.length > 0 && (
+          <div className="thinking-row">
+            <span className="thinking-label">{running ? 'Working' : 'Thinking'}</span>
+          </div>
+        )}
         {cards.map((card) => (
           <ToolCard
             key={card.id}
@@ -72,10 +78,13 @@ function Turn({ role, content, cards = [], streaming = false }) {
         ))}
         {streaming && <span className="cursor" />}
         {streaming && !content && cards.length === 0 && (
-          <div className="thinking">
-            <span />
-            <span />
-            <span />
+          <div className="thinking-row">
+            <span className="thinking-label">Thinking</span>
+            <div className="thinking">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
         )}
       </div>
@@ -83,7 +92,7 @@ function Turn({ role, content, cards = [], streaming = false }) {
   );
 }
 
-function EmptyState({ onSend, onOpenPanel, onOpenStoreTests }) {
+function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, idle = 'awake' }) {
   return (
     <div className="empty">
       <div className="empty-mark">
@@ -108,10 +117,17 @@ function EmptyState({ onSend, onOpenPanel, onOpenStoreTests }) {
       <div className="empty-chips">
         <span className="chip">Auto-fix</span>
         <span className="chip">Debug</span>
+        <span className="chip">Web search</span>
         <span className="chip">GitHub</span>
         <span className="chip">Hugging Face</span>
         <span className="chip">Store tests</span>
       </div>
+      {idle !== 'awake' && (
+        <div className="idle-note">
+          <IconMoon width={13} height={13} />
+          Forge is {idle === 'asleep' ? 'snoring' : 'resting'} — type to wake it up.
+        </div>
+      )}
     </div>
   );
 }
@@ -138,6 +154,7 @@ export default function ChatView({
   autoFix,
   onToggleAutoFix,
   onApplyFixes,
+  idle = 'awake',
 }) {
   const scrollRef = useRef(null);
 
@@ -148,6 +165,23 @@ export default function ChatView({
 
   const timeline = buildTimeline(messages);
   const activeModel = models.find((m) => m.id === model);
+  const running = liveTools.some((tool) => tool.status === 'running');
+  const phase = streaming
+    ? running
+      ? 'tools'
+      : liveText
+        ? 'writing'
+        : 'thinking'
+    : idle !== 'awake'
+      ? 'resting'
+      : 'ready';
+  const statusLabel = {
+    ready: activeModel ? activeModel.label : 'Gemma 4 26B',
+    thinking: 'Thinking…',
+    writing: 'Writing…',
+    tools: 'Running tools…',
+    resting: idle === 'asleep' ? 'Snoring… zzz' : 'Resting… zzz',
+  }[phase];
 
   return (
     <div className="chat">
@@ -160,7 +194,7 @@ export default function ChatView({
             <span className="chat-title-text">{session?.title || 'New session'}</span>
             <span className="chat-sub">
               <span className={`live-dot ${streaming ? 'busy' : ''}`} />
-              {streaming ? 'Working…' : activeModel ? activeModel.label : 'Gemma 4 26B'}
+              <span className={`status-label ${phase}`}>{statusLabel}</span>
             </span>
           </div>
           <button
@@ -201,14 +235,16 @@ export default function ChatView({
               onSend={onSend}
               onOpenPanel={onOpenPanel}
               onOpenStoreTests={onOpenStoreTests}
+              idle={idle}
             />
           ) : (
-            timeline.map((item) => (
+            timeline.map((item, index) => (
               <Turn
                 key={item.id}
                 role={item.role}
                 content={item.content}
                 cards={item.cards}
+                index={index}
               />
             ))
           )}
@@ -239,7 +275,12 @@ export default function ChatView({
             onApply={onApplyFixes}
           />
         )}
-        <Composer onSend={onSend} streaming={streaming} onStop={onStop} />
+        <Composer
+          onSend={onSend}
+          streaming={streaming}
+          onStop={onStop}
+          napping={idle !== 'awake' && !streaming}
+        />
         <div className="composer-hint">
           Files land in the workspace — export a ZIP for VS Code.
         </div>

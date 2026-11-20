@@ -190,7 +190,10 @@ function clientInfo(headers = {}) {
 }
 
 export function detectPlatform(headers = {}) {
-  if (cache.data && Date.now() - cache.at < CACHE_MS) return cache.data;
+  const client = clientInfo(headers);
+  if (cache.data && Date.now() - cache.at < CACHE_MS) {
+    return { ...cache.data, client };
+  }
 
   const osRelease = osInfo();
   const container = containerInfo();
@@ -198,7 +201,6 @@ export function detectPlatform(headers = {}) {
   const tools = toolsInfo();
   const editor = editorInfo();
   const ci = ciInfo();
-  const client = clientInfo(headers);
   const runtime = {
     node: process.versions.node,
     v8: process.versions.v8,
@@ -236,9 +238,9 @@ export function detectPlatform(headers = {}) {
     ci,
     git,
     tools,
-    client,
+    web: { online: true, search: ['Bing', 'DuckDuckGo', 'Wikipedia'], fetch: true },
   };
 
   cache = { at: Date.now(), data };
-  return data;
+  return { ...data, client };
 }
