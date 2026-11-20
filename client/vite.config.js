@@ -20,6 +20,14 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
         ws: true,
+        // The extension reconnects on its own; a client dropping mid-socket
+        // (ECONNRESET/EPIPE) is normal and shouldn't be logged as an error.
+        configure: (proxy) => {
+          proxy.on('error', (error) => {
+            if (['ECONNRESET', 'EPIPE'].includes(error.code)) return;
+            console.error('[browser/ws proxy]', error.message);
+          });
+        },
       },
     },
   },
