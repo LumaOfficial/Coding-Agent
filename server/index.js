@@ -53,6 +53,29 @@ import { resolveConsent } from './consent.js';
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
 const extensionDir = fileURLToPath(new URL('../extension', import.meta.url));
+const appRoot = fileURLToPath(new URL('..', import.meta.url));
+
+// The download is one zip whose root is the extension itself (manifest.json first,
+// no wrapping extension/ folder) with the API (server/) and the client (client/)
+// inside it, so extracting gives a single folder that Chrome can load unpacked and
+// that also carries everything the extension talks to.
+const extensionReadme = `Orbit - browser extension
+
+This folder is the whole package: the extension itself (manifest.json and the files
+next to it), the API in server/ and the web client in client/.
+
+1. Load the extension
+   chrome://extensions -> turn on Developer mode -> Load unpacked -> pick THIS folder
+   (the one that contains manifest.json).
+
+2. Start the API
+   cd server && npm install && npm start        # http://localhost:8000
+
+3. Start the client (optional, the extension does not need it)
+   cd client && npm install && npm run dev      # http://localhost:5173
+
+4. Open the Orbit popup, point it at the API and press Save & connect.
+`;
 
 app.use(express.json({ limit: '8mb' }));
 app.use('/api', apiAuth);
@@ -230,11 +253,16 @@ app.post('/api/consent/approve', (req, res) => {
 
 app.get('/api/browser/extension.zip', (req, res) => {
   res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', 'attachment; filename="orbit-browser-extension.zip"');
+  res.setHeader('Content-Disposition', 'attachment; filename="orbit-extension.zip"');
   const archive = archiver('zip', { zlib: { level: 9 } });
   archive.on('error', () => res.destroy());
   archive.pipe(res);
+
+  const skip = ['**/node_modules/**', '**/dist/**', '**/.data/**'];
   archive.directory(extensionDir, false);
+  archive.append(extensionReadme, { name: 'README.txt' });
+  archive.glob('server/**/*', { cwd: appRoot, dot: true, ignore: skip });
+  archive.glob('client/**/*', { cwd: appRoot, dot: true, ignore: skip });
   archive.finalize();
 });
 
