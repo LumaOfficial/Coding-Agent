@@ -26,6 +26,35 @@ function useStars(count) {
   }, [count]);
 }
 
+function useDust(count) {
+  return useMemo(() => {
+    const motes = [];
+    let seed = 31;
+    const random = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    for (let i = 0; i < count; i += 1) {
+      motes.push({
+        left: `${(random() * 100).toFixed(2)}%`,
+        bottom: `${(random() * 45).toFixed(2)}%`,
+        size: `${(1 + random() * 2.4).toFixed(2)}px`,
+        delay: `${(random() * 14).toFixed(2)}s`,
+        duration: `${(10 + random() * 11).toFixed(2)}s`,
+        drift: `${(-40 + random() * 80).toFixed(0)}px`,
+      });
+    }
+    return motes;
+  }, [count]);
+}
+
+const METEORS = [
+  { left: '70%', top: '-8%', delay: '1s', duration: '11s' },
+  { left: '90%', top: '4%', delay: '6s', duration: '13s' },
+  { left: '52%', top: '-14%', delay: '11s', duration: '15s' },
+  { left: '98%', top: '20%', delay: '17s', duration: '14s' },
+];
+
 function SleepZs({ asleep }) {
   const zs = useMemo(
     () =>
@@ -68,6 +97,7 @@ function SleepZs({ asleep }) {
 
 export default function Ambient({ level = 'awake' }) {
   const stars = useStars(34);
+  const dust = useDust(18);
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -94,9 +124,45 @@ export default function Ambient({ level = 'awake' }) {
 
   return (
     <div className={`ambient ${level}`} ref={rootRef} aria-hidden="true">
+      <div className="nebula">
+        <span className="nebula-blob nebula-1" />
+        <span className="nebula-blob nebula-2" />
+      </div>
+      <div className="grid-veil" />
       <div className="aurora aurora-1" />
       <div className="aurora aurora-2" />
       <div className="aurora aurora-3" />
+      <div className="meteors">
+        {METEORS.map((meteor, index) => (
+          <span
+            key={index}
+            className="meteor"
+            style={{
+              left: meteor.left,
+              top: meteor.top,
+              animationDelay: meteor.delay,
+              animationDuration: meteor.duration,
+            }}
+          />
+        ))}
+      </div>
+      <div className="dust">
+        {dust.map((mote, index) => (
+          <span
+            key={index}
+            className="dust-mote"
+            style={{
+              left: mote.left,
+              bottom: mote.bottom,
+              width: mote.size,
+              height: mote.size,
+              animationDelay: mote.delay,
+              animationDuration: mote.duration,
+              '--drift': mote.drift,
+            }}
+          />
+        ))}
+      </div>
       <div className="stars">
         {stars.map((star, index) => (
           <span

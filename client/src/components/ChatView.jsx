@@ -98,6 +98,7 @@ function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, idle = 'awake' }) {
   return (
     <div className="empty">
       <div className="empty-mark">
+        <span className="mark-orbit" aria-hidden="true" />
         <IconSpark width={24} height={24} />
       </div>
       <span className="empty-eyebrow">Cloudflare Workers AI · Gemma 4</span>
