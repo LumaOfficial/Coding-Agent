@@ -2327,3 +2327,80 @@ button {
   width: 100%;
   height: auto;
 }
+
+/* ---------------- browser permission card ---------------- */
+
+.browser-card {
+  margin-bottom: 8px;
+  padding: 11px 12px;
+  border: 1px solid rgba(139, 108, 255, 0.35);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(139, 108, 255, 0.14), rgba(20, 22, 34, 0.92)),
+    var(--surface);
+  box-shadow: 0 18px 40px -24px rgba(124, 92, 255, 0.9);
+}
+
+.browser-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.browser-card-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  border: 1px solid rgba(139, 108, 255, 0.3);
+  background: rgba(139, 108, 255, 0.18);
+  color: var(--accent-ink);
+}
+
+.browser-card-titles {
+  min-width: 0;
+}
+
+.browser-card-title {
+  font-size: 12.5px;
+  font-weight: 640;
+  letter-spacing: -0.005em;
+}
+
+.browser-card-summary {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.browser-card-detail,
+.browser-card-url {
+  margin: 7px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.browser-card-url {
+  font-family: var(--mono);
+}
+
+.browser-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.btn-small.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #8b6cff, #6f8cff);
+  color: #fff;
+}
+
+.btn-small.primary:hover {
+  filter: brightness(1.08);
+}

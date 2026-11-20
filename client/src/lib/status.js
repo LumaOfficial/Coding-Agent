@@ -60,6 +60,22 @@ export function toolActivity(name, args = {}) {
       return `Checking ${clip(args.path) || 'a snippet'}…`;
     case 'detect_platform':
       return 'Detecting the platform…';
+    case 'browser_tabs':
+      return 'Listing your open tabs…';
+    case 'browser_snapshot':
+      return 'Reading the page in your browser…';
+    case 'browser_screenshot':
+      return 'Looking at your browser tab…';
+    case 'browser_open':
+      return `Opening ${clip(args.url) || 'a page'} in your browser…`;
+    case 'browser_click':
+      return `Clicking ${clip(args.text || args.selector) || 'an element'} in your browser…`;
+    case 'browser_type':
+      return `Typing into ${clip(args.label || args.selector) || 'a field'} in your browser…`;
+    case 'browser_key':
+      return `Pressing ${clip(args.key) || 'a key'} in your browser…`;
+    case 'browser_scroll':
+      return `Scrolling ${args.direction || 'down'} in your browser…`;
     case 'web_search':
       return `Searching the web for ${quoted(args.query)}…`;
     case 'web_fetch':

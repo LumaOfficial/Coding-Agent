@@ -201,6 +201,29 @@ export default function RightPanel({
             ]}
           />
 
+          <IntegrationCard
+            icon={<IconGlobe width={15} height={15} />}
+            title="Your browser"
+            connected={integrations?.browser?.connected}
+            statusText={
+              integrations?.browser?.connected
+                ? 'Extension connected · every change needs your approval'
+                : 'Extension not connected'
+            }
+            description="Orbit works in the tab you have open: it reads the page, clicks, types and navigates — with its cursor visible on your screen. Anything that changes the page waits for an approval card in the chat first."
+            steps={[
+              'Download the extension ZIP below and unzip it',
+              'Open chrome://extensions, turn on Developer mode and choose Load unpacked → the unzipped folder',
+              'Open the Orbit extension popup, point it at this API and press Save & connect',
+            ]}
+            action={
+              <a className="btn-small" href="/api/browser/extension.zip" download>
+                <IconDownload width={13} height={13} />
+                Extension ZIP
+              </a>
+            }
+          />
+
           <PlatformCard />
           <Platforms />
         </div>

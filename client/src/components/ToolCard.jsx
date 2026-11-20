@@ -17,6 +17,22 @@ export function toolSummary(name, args = {}) {
       return `Check ${args.path || 'snippet'}`;
     case 'detect_platform':
       return 'Detect platform';
+    case 'browser_tabs':
+      return 'Your open tabs';
+    case 'browser_snapshot':
+      return 'Read the page in your browser';
+    case 'browser_screenshot':
+      return 'Screenshot of your browser';
+    case 'browser_open':
+      return `Open ${args.url || 'a page'} in your browser`;
+    case 'browser_click':
+      return `Click ${args.text || args.selector || 'an element'} in your browser`;
+    case 'browser_type':
+      return `Type into ${args.label || args.selector || 'a field'} in your browser`;
+    case 'browser_key':
+      return `Press ${args.key || 'a key'} in your browser`;
+    case 'browser_scroll':
+      return `Scroll ${args.direction || 'down'} in your browser`;
     case 'web_search':
       return `Web search · ${args.query || ''}`;
     case 'web_fetch':
@@ -85,6 +101,7 @@ function ToolIcon({ name }) {
     return <IconTerminal width={13} height={13} />;
   }
   if (name === 'detect_platform') return <IconSpark width={13} height={13} />;
+  if (name.startsWith('browser_')) return <IconGlobe width={13} height={13} />;
   if (name.startsWith('web_')) return <IconGlobe width={13} height={13} />;
   return <IconFile width={13} height={13} />;
 }

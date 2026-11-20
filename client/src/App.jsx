@@ -21,6 +21,8 @@ export default function App() {
   const [liveText, setLiveText] = useState('');
   const [liveTools, setLiveTools] = useState([]);
   const [error, setError] = useState('');
+  const [browserRequest, setBrowserRequest] = useState(null);
+  const [browserBusy, setBrowserBusy] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState('files');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -150,6 +152,20 @@ export default function App() {
     }
   }
 
+  async function approveBrowser(approved) {
+    if (!browserRequest) return;
+    const id = browserRequest.id;
+    setBrowserBusy(true);
+    setBrowserRequest(null);
+    try {
+      await api.approveBrowser(id, approved);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBrowserBusy(false);
+    }
+  }
+
   async function changeModel(next) {
     setModel(next);
     if (session) {
@@ -213,6 +229,8 @@ export default function App() {
                   : tool
               )
             );
+          } else if (event.type === 'browser_request') {
+            setBrowserRequest(event);
           } else if (event.type === 'error') {
             setError(event.message);
           }
@@ -222,6 +240,7 @@ export default function App() {
       if (err.name !== 'AbortError') setError(err.message);
     } finally {
       setStreaming(false);
+      setBrowserRequest(null);
       abortRef.current = null;
       try {
         const data = await api.session(sid);
@@ -297,6 +316,9 @@ export default function App() {
           liveText={liveText}
           liveTools={liveTools}
           error={error}
+          browserRequest={browserRequest}
+          browserBusy={browserBusy}
+          onBrowserApprove={approveBrowser}
           panelOpen={panelOpen}
           onTogglePanel={() => setPanelOpen((v) => !v)}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}

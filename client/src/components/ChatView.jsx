@@ -3,6 +3,7 @@ import Markdown from './Markdown.jsx';
 import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
 import ScanCard from './ScanCard.jsx';
+import BrowserCard from './BrowserCard.jsx';
 import ToolsMenu from './ToolsMenu.jsx';
 import { COSMIC_THOUGHTS, toolActivity, useRotatingMessage } from '../lib/status.js';
 import { IconAlert, IconMenu, IconMoon, IconPanel, IconSpark } from './Icons.jsx';
@@ -145,6 +146,9 @@ export default function ChatView({
   liveText,
   liveTools,
   error,
+  browserRequest,
+  browserBusy,
+  onBrowserApprove,
   panelOpen,
   onTogglePanel,
   onToggleSidebar,
@@ -279,6 +283,13 @@ export default function ChatView({
       </div>
 
       <div className="composer-wrap">
+        {browserRequest && (
+          <BrowserCard
+            request={browserRequest}
+            busy={browserBusy}
+            onApprove={onBrowserApprove}
+          />
+        )}
         {session && (
           <ScanCard
             scan={scan}

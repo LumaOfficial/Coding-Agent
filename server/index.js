@@ -1,6 +1,7 @@
 import express from 'express';
 import archiver from 'archiver';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   init,
   listSessions,
@@ -27,9 +28,17 @@ import {
   reapOrphanDesktops,
   screenshotDir,
 } from './desktop.js';
+import {
+  attachBrowserSocket,
+  browserStatus,
+  cancelSession,
+  resolveApproval,
+  subscribeSession,
+} from './browser.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
+const extensionDir = fileURLToPath(new URL('../extension', import.meta.url));
 
 app.use(express.json({ limit: '8mb' }));
 
@@ -130,7 +139,7 @@ async function probeHuggingFace() {
 
 app.get('/api/integrations', async (req, res) => {
   if (integrationCache.data && Date.now() - integrationCache.at < 30_000) {
-    return res.json(integrationCache.data);
+    return res.json({ ...integrationCache.data, browser: browserStatus() });
   }
   const [github, huggingface] = await Promise.all([probeGitHub(), probeHuggingFace()]);
   const cloudflare = configStatus();
@@ -145,9 +154,30 @@ app.get('/api/integrations', async (req, res) => {
     github,
     huggingface,
     desktop: { ...desktopStatus(), provider: 'E2B', idleMinutes: 3 },
+    browser: browserStatus(),
   };
   integrationCache = { at: Date.now(), data };
   res.json(data);
+});
+
+app.get('/api/browser/status', (req, res) => {
+  res.json(browserStatus());
+});
+
+app.post('/api/browser/approve', (req, res) => {
+  const id = String(req.body?.id || '');
+  if (!id) return res.status(400).json({ error: 'id is required' });
+  res.json({ ok: resolveApproval(id, Boolean(req.body?.approved)) });
+});
+
+app.get('/api/browser/extension.zip', (req, res) => {
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="orbit-browser-extension.zip"');
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  archive.on('error', () => res.destroy());
+  archive.pipe(res);
+  archive.directory(extensionDir, false);
+  archive.finalize();
 });
 
 app.get('/api/sessions', async (req, res) => {
@@ -249,6 +279,8 @@ app.post('/api/sessions/:id/chat', async (req, res) => {
   const controller = new AbortController();
   req.on('close', () => controller.abort());
 
+  const unsubscribe = subscribeSession(req.params.id, emit);
+
   try {
     await addMessage(req.params.id, { role: 'user', content: message });
 
@@ -267,6 +299,8 @@ app.post('/api/sessions/:id/chat', async (req, res) => {
       emit({ type: 'error', message: error.message || 'Agent failed' });
     }
   } finally {
+    unsubscribe();
+    cancelSession(req.params.id);
     if (!res.writableEnded) res.end();
   }
 });
@@ -309,10 +343,12 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
   });
 }
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Orbit API listening on http://0.0.0.0:${PORT}`);
   console.log(`Engine: Cloudflare Workers AI · ${MODEL.remote} (locked)`);
   reapOrphanDesktops().then((killed) => {
     if (killed) console.log(`Closed ${killed} leftover desktop sandbox${killed === 1 ? '' : 'es'}`);
   });
 });
+
+attachBrowserSocket(server);

@@ -1,4 +1,5 @@
 import * as workspace from './workspace.js';
+import * as browser from './browser.js';
 import * as web from './web.js';
 import * as desktop from './desktop.js';
 import * as github from './github.js';
@@ -11,6 +12,7 @@ import * as stores from './stores.js';
 
 const modules = [
   workspace,
+  browser,
   web,
   desktop,
   github,

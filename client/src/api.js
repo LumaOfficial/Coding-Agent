@@ -30,6 +30,9 @@ export const api = {
   scan: (id) => request(`/api/sessions/${id}/scan`),
   autofix: (id) => request(`/api/sessions/${id}/autofix`, { method: 'POST' }),
   closeDesktop: (id) => request(`/api/sessions/${id}/desktop/close`, { method: 'POST' }),
+  browserStatus: () => request('/api/browser/status'),
+  approveBrowser: (id, approved) =>
+    request('/api/browser/approve', { method: 'POST', body: { id, approved } }),
   storeTests: (id, targets) =>
     request(`/api/sessions/${id}/store-tests`, { method: 'POST', body: { targets } }),
 };
