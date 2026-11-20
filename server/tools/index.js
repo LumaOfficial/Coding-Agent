@@ -1,5 +1,6 @@
 import * as workspace from './workspace.js';
 import * as web from './web.js';
+import * as desktop from './desktop.js';
 import * as github from './github.js';
 import * as huggingface from './huggingface.js';
 import * as vscode from './vscode.js';
@@ -8,7 +9,18 @@ import * as platforms from './platforms.js';
 import * as autofix from './autofix.js';
 import * as stores from './stores.js';
 
-const modules = [workspace, web, github, huggingface, platforms, vscode, platform, autofix, stores];
+const modules = [
+  workspace,
+  web,
+  desktop,
+  github,
+  huggingface,
+  platforms,
+  vscode,
+  platform,
+  autofix,
+  stores,
+];
 
 export const toolDefinitions = modules.flatMap((m) => m.definitions);
 
@@ -28,6 +40,16 @@ export async function executeTool(name, args, ctx) {
   if (!handler) return { ok: false, content: `Unknown tool: ${name}` };
   try {
     const result = await handler(args || {}, ctx);
+
+    // Desktop tools can return { text, image } so the model sees the screen.
+    if (result && typeof result === 'object' && typeof result.image === 'string') {
+      return {
+        ok: true,
+        content: String(result.text || '').slice(0, MAX_RESULT),
+        image: result.image,
+      };
+    }
+
     const text = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
     return {
       ok: true,

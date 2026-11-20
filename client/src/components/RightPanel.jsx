@@ -6,6 +6,7 @@ import {
   IconCopy,
   IconDownload,
   IconFile,
+  IconGlobe,
   IconSpark,
 } from './Icons.jsx';
 import StoreTests from './StoreTests.jsx';
@@ -179,6 +180,24 @@ export default function RightPanel({
             steps={[
               'Create a Cloudflare API token with Workers AI access',
               'Add CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID in the secrets panel',
+            ]}
+          />
+
+          <IntegrationCard
+            icon={<IconGlobe width={15} height={15} />}
+            title="Forge's computer"
+            connected={integrations?.desktop?.configured}
+            statusText={
+              integrations?.desktop?.configured
+                ? `${integrations?.desktop?.active || 0} sandbox${
+                    (integrations?.desktop?.active || 0) === 1 ? '' : 'es'
+                  } running · auto-stops after 3 min idle`
+                : 'Missing E2B_API_KEY'
+            }
+            description="An isolated Linux desktop with Chromium that Gemma 4 drives itself: open URLs, click, type, run terminal commands and take screenshots to check its own work. Sandboxes are killed after 3 minutes of inactivity or when a chat closes."
+            steps={[
+              'Create an API key at e2b.dev/dashboard',
+              'Add E2B_API_KEY in the secrets panel',
             ]}
           />
 

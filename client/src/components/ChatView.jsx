@@ -118,6 +118,7 @@ function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, idle = 'awake' }) {
         <span className="chip">Auto-fix</span>
         <span className="chip">Debug</span>
         <span className="chip">Web search</span>
+        <span className="chip">Desktop</span>
         <span className="chip">GitHub</span>
         <span className="chip">Hugging Face</span>
         <span className="chip">Store tests</span>

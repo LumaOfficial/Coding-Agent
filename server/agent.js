@@ -8,7 +8,7 @@ import { chatCompletion, configStatus } from './cloudflare.js';
  * platform, autofix, stores). No other model is available.
  */
 
-const MAX_STEPS = 8;
+const MAX_STEPS = 12;
 const HISTORY_LIMIT = 20;
 
 const SYSTEM_PROMPT = `You are Forge, a coding agent working inside the user's workspace.
@@ -20,6 +20,8 @@ Rules:
 - write_file always takes the complete file, not a fragment.
 - After changing code, call autofix_workspace and fix whatever it reports.
 - test_store_readiness checks a project against app stores; use it when asked about submission.
+- You also have your own isolated Linux computer (E2B desktop) with Chromium. Use it to check or test something yourself instead of guessing: desktop_navigate to open a URL, desktop_screenshot to look at the screen, desktop_click (pixel coordinates from the screenshot) and desktop_type/desktop_key to interact, desktop_terminal to run shell commands inside the VM, desktop_close when you are done. Screenshots come back to you as images — read them before the next click.
+- The desktop shuts itself down after 3 minutes of inactivity, so batch your steps and call desktop_close when finished.
 - GitHub and Hugging Face tools are read-only without a token.
 - Answer in short markdown: what you did, then the result. No preamble, no filler.`;
 
@@ -31,6 +33,16 @@ function parseArgs(raw) {
   } catch {
     return {};
   }
+}
+
+/** Keep only the newest screenshot so image tokens never pile up. */
+function pruneImages(messages) {
+  const hasImage = (m) =>
+    Array.isArray(m.content) && m.content.some((part) => part?.type === 'image_url');
+  const imageIndexes = messages.map((m, i) => (hasImage(m) ? i : -1)).filter((i) => i >= 0);
+  if (imageIndexes.length <= 1) return messages;
+  const keep = imageIndexes[imageIndexes.length - 1];
+  return messages.filter((m, i) => !hasImage(m) || i === keep);
 }
 
 function buildHistory(messages) {
@@ -100,7 +112,7 @@ export async function runAgent({ sessionId, emit }) {
   let seq = 0;
 
   for (let step = 0; step < MAX_STEPS; step += 1) {
-    const completion = await chatCompletion(history);
+    const completion = await chatCompletion(pruneImages(history));
     if (!completion.ok) {
       await finish(sessionId, emit, `**Gemma 4 request failed.**\n\n${completion.error}`, executed);
       return;
@@ -131,9 +143,21 @@ export async function runAgent({ sessionId, emit }) {
         name,
         ok: result.ok,
         result: result.content.slice(0, 4000),
+        ...(result.image ? { image: result.image } : {}),
       });
 
       history.push({ role: 'tool', tool_call_id: id, name, content: result.content });
+
+      // Desktop tools hand back a screenshot; show it to the model as an image.
+      if (result.image) {
+        history.push({
+          role: 'user',
+          content: [
+            { type: 'text', text: `Screenshot of Forge's desktop after ${name}:` },
+            { type: 'image_url', image_url: { url: result.image } },
+          ],
+        });
+      }
       executed.push({ id, name, args, content: result.content });
     }
   }

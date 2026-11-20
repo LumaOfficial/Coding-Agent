@@ -20,6 +20,12 @@ import { fixWorkspace, scanWorkspace } from './autofix.js';
 import { detectPlatform } from './platform.js';
 import { listPlatforms } from './platforms.js';
 import { listStoreTargets, runStoreTests } from './stores.js';
+import {
+  closeAllDesktops,
+  closeDesktop,
+  desktopStatus,
+  screenshotDir,
+} from './desktop.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
@@ -35,6 +41,12 @@ app.get('/api/models', (req, res) => {
 app.get('/api/platform', (req, res) => {
   res.json(detectPlatform(req.headers));
 });
+
+app.get('/api/desktop/status', (req, res) => {
+  res.json(desktopStatus());
+});
+
+app.use('/api/desktop/screenshots', express.static(screenshotDir, { maxAge: '1h' }));
 
 app.get('/api/platforms', (req, res) => {
   res.json({ platforms: listPlatforms() });
@@ -131,6 +143,7 @@ app.get('/api/integrations', async (req, res) => {
     },
     github,
     huggingface,
+    desktop: { ...desktopStatus(), provider: 'E2B', idleMinutes: 3 },
   };
   integrationCache = { at: Date.now(), data };
   res.json(data);
@@ -168,8 +181,14 @@ app.patch('/api/sessions/:id', async (req, res) => {
 });
 
 app.delete('/api/sessions/:id', async (req, res) => {
+  await closeDesktop(req.params.id);
   await deleteSession(req.params.id);
   res.json({ ok: true });
+});
+
+app.post('/api/sessions/:id/desktop/close', async (req, res) => {
+  const closed = await closeDesktop(req.params.id);
+  res.json({ ok: true, closed });
 });
 
 app.get('/api/sessions/:id/workspace', async (req, res) => {
@@ -282,6 +301,13 @@ app.post('/api/sessions/:id/autofix', async (req, res) => {
 });
 
 await init();
+
+for (const signal of ['SIGTERM', 'SIGINT']) {
+  process.once(signal, () => {
+    closeAllDesktops().finally(() => process.exit(0));
+  });
+}
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Forge API listening on http://0.0.0.0:${PORT}`);
   console.log(`Engine: Cloudflare Workers AI · ${MODEL.remote} (locked)`);

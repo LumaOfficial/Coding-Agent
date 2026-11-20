@@ -127,6 +127,7 @@ export default function App() {
 
   async function newSession() {
     abortRef.current?.abort();
+    if (activeIdRef.current) api.closeDesktop(activeIdRef.current).catch(() => {});
     activeIdRef.current = null;
     setSession(null);
     setMessages([]);

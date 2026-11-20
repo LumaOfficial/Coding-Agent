@@ -2309,3 +2309,19 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* desktop screenshots inside tool cards */
+.tool-shot {
+  display: block;
+  margin: 0 0 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #05060a;
+}
+
+.tool-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}

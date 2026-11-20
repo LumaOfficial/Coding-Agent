@@ -49,12 +49,35 @@ export function toolSummary(name, args = {}) {
       return `Model card · ${args.model_id || ''}`;
     case 'generate_vscode_workspace':
       return 'VS Code workspace files';
+    case 'desktop_launch':
+      return `Desktop · open ${args.app || 'Chromium'}`;
+    case 'desktop_navigate':
+      return `Desktop · ${args.url || 'open page'}`;
+    case 'desktop_click':
+      return `Desktop · click ${args.x ?? '?'}, ${args.y ?? '?'}`;
+    case 'desktop_type':
+      return 'Desktop · type text';
+    case 'desktop_key':
+      return `Desktop · press ${args.keys || ''}`;
+    case 'desktop_terminal':
+      return `Desktop · $ ${String(args.command || '').slice(0, 48)}`;
+    case 'desktop_screenshot':
+      return 'Desktop screenshot';
+    case 'desktop_close':
+      return 'Desktop · shut down';
     default:
       return name;
   }
 }
 
+const SHOT_RE = /\/api\/desktop\/screenshots\/[^\s)"']+\.png/;
+
 function ToolIcon({ name }) {
+  if (name === 'desktop_terminal') return <IconTerminal width={13} height={13} />;
+  if (name === 'desktop_navigate' || name === 'desktop_launch') {
+    return <IconGlobe width={13} height={13} />;
+  }
+  if (name.startsWith('desktop_')) return <IconSpark width={13} height={13} />;
   if (name.startsWith('github_')) return <IconGithub width={13} height={13} />;
   if (name.startsWith('hf_')) return <IconSpark width={13} height={13} />;
   if (name === 'generate_vscode_workspace') return <IconTerminal width={13} height={13} />;
@@ -67,8 +90,9 @@ function ToolIcon({ name }) {
 }
 
 export default function ToolCard({ name, args, result, status = 'ok' }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(name === 'desktop_screenshot');
   const summary = toolSummary(name, args);
+  const shot = typeof result === 'string' ? result.match(SHOT_RE)?.[0] : null;
 
   return (
     <div className={`tool-card ${status}`}>
@@ -92,6 +116,11 @@ export default function ToolCard({ name, args, result, status = 'ok' }) {
           {result !== undefined && (
             <>
               <div className="tool-label">Output</div>
+              {shot && (
+                <a className="tool-shot" href={shot} target="_blank" rel="noreferrer">
+                  <img src={shot} alt="Forge desktop screenshot" loading="lazy" />
+                </a>
+              )}
               <pre>{result || '(empty)'}</pre>
             </>
           )}

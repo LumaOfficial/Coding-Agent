@@ -27,6 +27,19 @@ function endpoint() {
   return `${API_ROOT}/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/ai/v1/chat/completions`;
 }
 
+function stripImages(messages) {
+  return messages.map((message) => {
+    if (!Array.isArray(message.content)) return message;
+    const text = message.content
+      .filter((part) => part?.type !== 'image_url')
+      .map((part) => part.text || '')
+      .join('\n')
+      .trim();
+    if (text) return { ...message, content: text };
+    return { ...message, content: '(screenshot omitted)' };
+  });
+}
+
 /**
  * One non-streaming completion. Returns { ok, message } where message is an
  * OpenAI-shaped assistant message, or { ok: false, error }.
@@ -40,9 +53,8 @@ export async function chatCompletion(messages) {
     };
   }
 
-  let response;
-  try {
-    response = await fetch(endpoint(), {
+  const post = (payloadMessages) =>
+    fetch(endpoint(), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.CLOUDFLARE_API_KEY}`,
@@ -50,7 +62,7 @@ export async function chatCompletion(messages) {
       },
       body: JSON.stringify({
         model: MODEL.remote,
-        messages,
+        messages: payloadMessages,
         tools: toolDefinitions,
         tool_choice: 'auto',
         temperature: 0.2,
@@ -58,8 +70,24 @@ export async function chatCompletion(messages) {
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
+
+  let response;
+  try {
+    response = await post(messages);
   } catch (error) {
     return { ok: false, error: `Could not reach Cloudflare: ${error.message}` };
+  }
+
+  // Screenshots are optional: if the model rejects image parts, retry text-only.
+  const hadImages = messages.some(
+    (m) => Array.isArray(m.content) && m.content.some((part) => part?.type === 'image_url')
+  );
+  if (!response.ok && hadImages && [400, 413, 415, 422].includes(response.status)) {
+    try {
+      response = await post(stripImages(messages));
+    } catch (error) {
+      return { ok: false, error: `Could not reach Cloudflare: ${error.message}` };
+    }
   }
 
   const text = await response.text();

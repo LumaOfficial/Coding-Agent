@@ -8,6 +8,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@e2b/desktop": "^2.5.0",
     "archiver": "^7.0.1",
     "express": "^4.21.2"
   }

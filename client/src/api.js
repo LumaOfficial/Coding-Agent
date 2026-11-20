@@ -29,6 +29,7 @@ export const api = {
   stores: () => request('/api/stores'),
   scan: (id) => request(`/api/sessions/${id}/scan`),
   autofix: (id) => request(`/api/sessions/${id}/autofix`, { method: 'POST' }),
+  closeDesktop: (id) => request(`/api/sessions/${id}/desktop/close`, { method: 'POST' }),
   storeTests: (id, targets) =>
     request(`/api/sessions/${id}/store-tests`, { method: 'POST', body: { targets } }),
 };
