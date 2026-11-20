@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import Markdown from './Markdown.jsx';
 import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
@@ -6,7 +6,7 @@ import ScanCard from './ScanCard.jsx';
 import BrowserCard from './BrowserCard.jsx';
 import ConsentCard from './ConsentCard.jsx';
 import ToolsMenu from './ToolsMenu.jsx';
-import { COSMIC_THOUGHTS, toolActivity, useRotatingMessage } from '../lib/status.js';
+import { isLongTask, toolActivity, useSlowFlag, useThinkingLabel } from '../lib/status.js';
 import { IconAlert, IconMenu, IconMoon, IconPanel, IconSpark } from './Icons.jsx';
 
 function buildTimeline(messages) {
@@ -64,11 +64,6 @@ function Turn({ role, content, cards = [], streaming = false, index = 0, streami
       </div>
       <div className="turn-body">
         {content ? <Markdown>{content}</Markdown> : null}
-        {streaming && !content && cards.length > 0 && (
-          <div className="thinking-row">
-            <span className="thinking-label">{streamingLabel}</span>
-          </div>
-        )}
         {cards.map((card) => (
           <ToolCard
             key={card.id}
@@ -78,17 +73,19 @@ function Turn({ role, content, cards = [], streaming = false, index = 0, streami
             status={card.status}
           />
         ))}
-        {streaming && <span className="cursor" />}
-        {streaming && !content && cards.length === 0 && (
+        {streaming && content ? <span className="cursor" /> : null}
+        {streaming && !content ? (
           <div className="thinking-row">
             <span className="thinking-label">{streamingLabel}</span>
-            <div className="thinking">
-              <span />
-              <span />
-              <span />
-            </div>
+            {cards.some((card) => card.status === 'running') ? null : (
+              <div className="thinking">
+                <span />
+                <span />
+                <span />
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -176,11 +173,13 @@ export default function ChatView({
   const timeline = buildTimeline(messages);
   const activeModel = models.find((m) => m.id === model);
   const runningTool = liveTools.find((tool) => tool.status === 'running');
-  const thought = useRotatingMessage(
-    COSMIC_THOUGHTS,
-    2400,
-    streaming && !liveText && !runningTool
+  const waiting = streaming && !liveText && !runningTool;
+  const lastUserText = useMemo(
+    () => [...(messages || [])].reverse().find((m) => m.role === 'user')?.content || '',
+    [messages]
   );
+  const slowTurn = useSlowFlag(waiting);
+  const thought = useThinkingLabel(waiting, isLongTask(lastUserText) || slowTurn);
   const liveStatus = runningTool ? toolActivity(runningTool.name, runningTool.args) : thought;
   const phase = streaming
     ? runningTool

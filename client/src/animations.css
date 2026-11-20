@@ -462,12 +462,33 @@
 }
 
 .chat-sub .status-label.thinking {
-  background: linear-gradient(90deg, #a7b1c4, #c3b4ff, #58d5ff, #a7b1c4);
-  background-size: 300% 100%;
+  background: linear-gradient(
+    100deg,
+    #6f7683 0%,
+    #cfd3da 42%,
+    #ffffff 50%,
+    #cfd3da 58%,
+    #6f7683 100%
+  );
+  background-size: 250% 100%;
+  background-position: 0% 50%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shimmer-text 2.4s linear infinite;
+  animation: thinking-sweep 4.6s ease-in-out infinite;
+}
+
+/* A white gleam crosses the black-and-white label every few seconds. */
+@keyframes thinking-sweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  38% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
 }
 
 @keyframes shimmer-text {
@@ -630,13 +651,21 @@
 
 .thinking-label {
   min-width: 0;
-  background: linear-gradient(90deg, #9aa5ba, #c3b4ff, #58d5ff, #9aa5ba);
-  background-size: 300% 100%;
+  background: linear-gradient(
+    100deg,
+    #6f7683 0%,
+    #cfd3da 42%,
+    #ffffff 50%,
+    #cfd3da 58%,
+    #6f7683 100%
+  );
+  background-size: 250% 100%;
+  background-position: 0% 50%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   font-weight: 600;
-  animation: shimmer-text 2.6s linear infinite;
+  animation: thinking-sweep 4.6s ease-in-out infinite;
 }
 
 .thinking-row .thinking {
@@ -1166,5 +1195,12 @@
   .integration.connected,
   .platform-pill {
     animation: none !important;
+  }
+
+  /* Keep the label readable when the sweep is off. */
+  .thinking-label,
+  .chat-sub .status-label.thinking {
+    background: none;
+    color: var(--text-dim);
   }
 }

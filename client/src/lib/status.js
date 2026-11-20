@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** Cosmic phrases Orbit cycles through while it thinks. */
+/** Cosmic phrases Orbit cycles through while a long task runs. */
 export const COSMIC_THOUGHTS = [
   'Stargazing…',
   'Revolving around Earth…',
@@ -8,6 +8,36 @@ export const COSMIC_THOUGHTS = [
   'Calculating trajectory…',
   'Scanning deep space…',
 ];
+
+/** Plain label for quick turns that should not pretend to be a big mission. */
+export const THINKING_PLAIN = 'Thinking…';
+
+const LONG_TASK_WORDS =
+  /\b(plan|planning|design|build|building|code|coding|implement|refactor|debug|fix|research|search|find|compare|analy[sz]e|review|audit|scan|test|tests|deploy|migrate|optimi[sz]e|generate|write|create|add|remove|update|upgrade|setup|integrate|install|commit|push|github|hugging face|desktop|browser|website|project|investigate)\b/i;
+
+/** True when a request looks like real work (planning, research, code) rather than a quick reply. */
+export function isLongTask(prompt = '') {
+  const text = String(prompt || '').trim();
+  if (!text) return false;
+  if (text.split(/\s+/).length > 12) return true;
+  return LONG_TASK_WORDS.test(text);
+}
+
+/** True once `active` has stayed on for `delay` ms — a hint the turn is taking a while. */
+export function useSlowFlag(active, delay = 8000) {
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setSlow(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setSlow(true), delay);
+    return () => clearTimeout(timer);
+  }, [active, delay]);
+
+  return slow;
+}
 
 /** Rotate through `messages` while `active`; resets to the first one otherwise. */
 export function useRotatingMessage(messages, interval = 2400, active = true) {
@@ -25,6 +55,16 @@ export function useRotatingMessage(messages, interval = 2400, active = true) {
   }, [active, interval, messages.length]);
 
   return messages[index % messages.length];
+}
+
+/**
+ * What Orbit says while waiting on the model: the cosmic phrases only when the
+ * turn is known to be long (planning, research, code) or has already dragged on,
+ * a plain "Thinking…" for everything quick.
+ */
+export function useThinkingLabel(active, cosmic) {
+  const phrase = useRotatingMessage(COSMIC_THOUGHTS, 2600, active && cosmic);
+  return active && cosmic ? phrase : THINKING_PLAIN;
 }
 
 function clip(value, max = 64) {
