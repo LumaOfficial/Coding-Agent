@@ -86,14 +86,17 @@
 
   function describe(el) {
     if (!el) return 'element';
-    const text = normalize(
+    // Display text keeps the page's own casing; `normalize` lowercases for matching.
+    const text = String(
       el.innerText ||
         el.value ||
         el.getAttribute('aria-label') ||
         el.getAttribute('placeholder') ||
         el.getAttribute('name') ||
         el.id
-    );
+    )
+      .replace(/\s+/g, ' ')
+      .trim();
     return text ? `"${text.slice(0, 60)}"` : `<${el.tagName.toLowerCase()}>`;
   }
 

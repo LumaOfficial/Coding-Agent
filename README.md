@@ -72,9 +72,10 @@ Chrome loads the folder that **contains `manifest.json`** — in this repository
 
 1. Get the folder: download **Integrations → Your browser → Extension ZIP** from the app and unzip
    it, or use `extension/` from a clone.
-2. From the GitHub repository ZIP, open the extracted `Coding-Agent-main` folder and go into
-   **`extension`**. Pointing *Load unpacked* at the repository root fails with "Manifest file is
-   missing or unreadable", because `manifest.json` sits one level down.
+2. From the GitHub repository ZIP, open the extracted folder (`Coding-Agent-main` for `main`, or
+   `Coding-Agent-<branch>` for another branch) and go into **`extension`**. Pointing *Load unpacked*
+   at the extracted root fails with "Manifest file is missing or unreadable", because
+   `manifest.json` sits one level down.
 3. Open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked** and select that
    `extension` folder.
 4. Open the Orbit popup, paste the API URL shown in the app's **Integrations → Your browser** card
