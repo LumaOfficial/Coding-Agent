@@ -11,13 +11,14 @@ via Cloudflare Workers AI — it is the only model the app offers.
 - **Its own browser** — `web_search` queries the live web (Bing, then DuckDuckGo instant answers,
   then Wikipedia) and `web_fetch` opens a public page and returns its readable text. No API key,
   no user tab; private/local addresses are refused.
-- **Your browser** — the Orbit extension (`extension/`, download it from Integrations → *Your
-  browser*) connects to the API over a WebSocket and lets Orbit work in the tab you already have
-  open. `browser_tabs`, `browser_snapshot` and `browser_screenshot` are read-only; `browser_open`,
+- **Your browser** — the app ships as a Chrome Manifest V3 extension (`extension/`). The full UI
+  is built into `extension/app` and opens in a tab or the side panel; the background worker
+  connects to the API over a WebSocket and lets Orbit work in the tab you already have open.
+  `browser_tabs`, `browser_snapshot` and `browser_screenshot` are read-only; `browser_open`,
   `browser_click`, `browser_type`, `browser_key` and `browser_scroll` publish an approval card in
   the chat and only run when you press **Allow**. The extension injects its content script on
   demand (`scripting` + `<all_urls>` host access), moves a visible Orbit cursor, dispatches real
-  clicks and types character by character, then returns a screenshot. Point its popup at the API
+  clicks and types character by character, then returns a screenshot. Its popup points at the API
   (`http://localhost:8000` by default). Declining tells the agent to stop and ask what you want.
 - **Consent cards** — anything with a real side effect asks first in the chat and only runs when
   you press **Allow**: deleting a workspace file, overwriting an existing one, committing to
@@ -58,6 +59,29 @@ via Cloudflare Workers AI — it is the only model the app offers.
   icons, target SDK, signing, privacy policy/manifest, listing screenshots). The **Stores** tab in
   the panel shows the same report.
 
+## Chrome extension (Manifest V3)
+
+`extension/` is the Chrome Web Store package: `manifest.json` sits at its root,
+with the background worker, the content script, the toolbar popup and the built
+app under `app/`.
+
+```sh
+npm run build:extension     # builds client/ into extension/app
+npm run package:extension   # builds, then writes dist/orbit-extension.zip
+```
+
+Load it in Chrome: open `chrome://extensions`, turn on Developer mode, choose
+**Load unpacked** and pick the `extension/` folder. The toolbar popup sets the
+API address, reconnects the browser bridge, and opens the app in a tab or the
+side panel. A fresh install opens the app automatically.
+
+The extension page calls the API directly from its `chrome-extension://` origin,
+so the server answers CORS for extension origins (and any origin listed in
+`APP_ORIGINS`). Sign-in returns the signed session token in the response body;
+the extension page keeps it in local storage and sends it as
+`Authorization: Bearer …`, while the web app keeps using the httpOnly cookie.
+`extension/privacy.md` is the privacy policy required by the store listing.
+
 ## Run locally
 
 ```sh
@@ -93,6 +117,9 @@ their tokens.
 ## Layout
 
 ```
-server/   Express + SSE turn loop, Cloudflare client, tool registry, JSON/file session store
-client/   Vite + React chat UI, tools menu, workspace panel, integrations panel
+server/     Express + SSE turn loop, Cloudflare client, tool registry, JSON/file session store
+client/     Vite + React chat UI, tools menu, workspace panel, integrations panel
+extension/  Chrome Manifest V3 package: manifest, background worker, content script,
+            popup, icons, privacy policy, and the built app in app/ (gitignored)
+scripts/    package-extension.mjs — zips extension/ for the Chrome Web Store
 ```

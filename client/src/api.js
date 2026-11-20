@@ -1,8 +1,80 @@
+/**
+ * Talks to the Orbit API from either place the UI runs:
+ *
+ * - the Vite dev server / a hosted web page, where `/api` is same-origin and
+ *   the httpOnly session cookie authenticates every call;
+ * - the Chrome extension page, where the API is a different origin
+ *   (`http://localhost:8000` by default, set in the extension popup), so calls
+ *   carry the signed token as a bearer header and `chrome.storage.local` holds
+ *   the API address shared with the background worker.
+ */
+
+const EXTENSION = typeof chrome !== 'undefined' && Boolean(chrome?.runtime?.id);
+const DEFAULT_API = 'http://localhost:8000';
+const TOKEN_KEY = 'orbit.token';
+
+const normalizeBase = (value) => String(value || DEFAULT_API).trim().replace(/\/+$/, '');
+
+export const isExtension = EXTENSION;
+
+let apiBase = EXTENSION ? DEFAULT_API : '';
+
+const baseReady = EXTENSION
+  ? chrome.storage.local
+      .get('apiUrl')
+      .then(({ apiUrl }) => {
+        apiBase = normalizeBase(apiUrl);
+      })
+      .catch(() => {})
+  : Promise.resolve();
+
+if (EXTENSION) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.apiUrl) apiBase = normalizeBase(changes.apiUrl.newValue);
+  });
+}
+
+function readToken() {
+  try {
+    return localStorage.getItem(TOKEN_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+function storeToken(token) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* storage can be unavailable — the session still lasts for this page */
+  }
+}
+
+async function urlFor(path) {
+  await baseReady;
+  return `${apiBase}${path}`;
+}
+
+function credentialsMode() {
+  return EXTENSION ? 'include' : 'same-origin';
+}
+
+function headersFor(body) {
+  const headers = {};
+  if (body) headers['Content-Type'] = 'application/json';
+  if (EXTENSION) {
+    const token = readToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 async function request(path, { method = 'GET', body } = {}) {
-  const res = await fetch(path, {
+  const res = await fetch(await urlFor(path), {
     method,
-    credentials: 'same-origin',
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    credentials: credentialsMode(),
+    headers: headersFor(body),
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
@@ -13,6 +85,7 @@ async function request(path, { method = 'GET', body } = {}) {
     data = { error: text };
   }
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  if (EXTENSION && data.token) storeToken(data.token);
   return data;
 }
 
@@ -20,7 +93,11 @@ export const api = {
   me: () => request('/api/auth/me'),
   signup: (body) => request('/api/auth/signup', { method: 'POST', body }),
   login: (body) => request('/api/auth/login', { method: 'POST', body }),
-  logout: () => request('/api/auth/logout', { method: 'POST' }),
+  logout: async () => {
+    const data = await request('/api/auth/logout', { method: 'POST' });
+    if (EXTENSION) storeToken('');
+    return data;
+  },
   markOnboarded: () => request('/api/auth/onboarded', { method: 'POST' }),
   models: () => request('/api/models'),
   integrations: () => request('/api/integrations'),
@@ -45,11 +122,36 @@ export const api = {
     request(`/api/sessions/${id}/store-tests`, { method: 'POST', body: { targets } }),
 };
 
+/** Saves an authenticated API download (workspace ZIP, extension package). */
+export async function downloadFile(path, filename) {
+  const res = await fetch(await urlFor(path), {
+    credentials: credentialsMode(),
+    headers: headersFor(null),
+  });
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  const href = URL.createObjectURL(await res.blob());
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = filename || 'download';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(href), 5000);
+}
+
+/** Loads an authenticated image (desktop screenshots) into a blob URL. */
+export async function loadImage(path) {
+  const res = await fetch(await urlFor(path), {
+    credentials: credentialsMode(),
+    headers: headersFor(null),
+  });
+  if (!res.ok) throw new Error(`Image failed (${res.status})`);
+  return URL.createObjectURL(await res.blob());
+}
+
 export async function streamChat({ sessionId, message, model, signal, onEvent }) {
-  const res = await fetch(`/api/sessions/${sessionId}/chat`, {
+  const res = await fetch(await urlFor(`/api/sessions/${sessionId}/chat`), {
     method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
+    credentials: credentialsMode(),
+    headers: headersFor({ message }),
     body: JSON.stringify({ message, model }),
     signal,
   });

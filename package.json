@@ -1,0 +1,10 @@
+{
+  "name": "orbit",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Orbit — a coding agent that ships as a Chrome Manifest V3 extension.",
+  "scripts": {
+    "build:extension": "npm --prefix client run build:extension",
+    "package:extension": "npm run build:extension && node scripts/package-extension.mjs"
+  }
+}

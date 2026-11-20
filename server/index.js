@@ -54,6 +54,36 @@ const app = express();
 const PORT = Number(process.env.PORT || 8000);
 const extensionDir = fileURLToPath(new URL('../extension', import.meta.url));
 
+const ALLOWED_ORIGINS = (process.env.APP_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
+/**
+ * The app ships as a Chrome extension whose pages run on a chrome-extension://
+ * origin, so the API has to answer CORS for it (and for any origin the operator
+ * lists in APP_ORIGINS). Localhost stays allowed for the built app and local
+ * tooling. The browser still authenticates with the same signed session token.
+ */
+function allowedOrigin(origin) {
+  if (origin.startsWith('chrome-extension://')) return true;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+}
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json({ limit: '8mb' }));
 app.use('/api', apiAuth);
 
@@ -67,8 +97,9 @@ app.post('/api/auth/signup', async (req, res) => {
   try {
     const user = await signUp(req.body || {});
     await claimOwnerlessSessions(user.id);
-    setSessionCookie(res, await issueToken(user.id));
-    res.status(201).json({ user });
+    const token = await issueToken(user.id);
+    setSessionCookie(res, token);
+    res.status(201).json({ user, token });
   } catch (error) {
     res.status(error.status || 500).json({ error: error.message || 'Could not create the account.' });
   }
@@ -77,8 +108,9 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const user = await signIn(req.body || {});
-    setSessionCookie(res, await issueToken(user.id));
-    res.json({ user });
+    const token = await issueToken(user.id);
+    setSessionCookie(res, token);
+    res.json({ user, token });
   } catch (error) {
     res.status(error.status || 500).json({ error: error.message || 'Could not sign in.' });
   }

@@ -7,6 +7,7 @@ import {
   IconSend,
   IconSpark,
 } from './Icons.jsx';
+import { downloadFile, isExtension } from '../api.js';
 
 /**
  * Key-free integrations. Nothing here asks for an API key or a client ID: Orbit
@@ -55,7 +56,7 @@ export default function KeyFreeIntegrations({ connected }) {
       <div className="keyfree-head">
         <span className="integration-group-label">Everyday integrations</span>
         <span className={`keyfree-badge ${connected ? 'ok' : ''}`}>
-          {connected ? 'Ready' : 'Needs the extension'}
+          {connected ? 'Ready' : isExtension ? 'Not connected' : 'Needs the extension'}
         </span>
       </div>
       <p className="keyfree-note">
@@ -83,12 +84,25 @@ export default function KeyFreeIntegrations({ connected }) {
         </div>
       ))}
 
-      {!connected && (
-        <a className="btn-small" href="/api/browser/extension.zip" download>
-          <IconDownload width={13} height={13} />
-          Get the extension
-        </a>
-      )}
+      {!connected &&
+        (isExtension ? (
+          <p className="keyfree-note">
+            The extension is installed — open the Orbit toolbar icon and press Save &amp; connect
+            so it can reach this API.
+          </p>
+        ) : (
+          <button
+            className="btn-small"
+            onClick={() =>
+              downloadFile('/api/browser/extension.zip', 'orbit-browser-extension.zip').catch(
+                () => {}
+              )
+            }
+          >
+            <IconDownload width={13} height={13} />
+            Get the extension
+          </button>
+        ))}
     </section>
   );
 }

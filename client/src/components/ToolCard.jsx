@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IconChevron, IconFile, IconGithub, IconGlobe, IconSpark, IconTerminal } from './Icons.jsx';
+import { loadImage } from '../api.js';
 
 export function toolSummary(name, args = {}) {
   switch (name) {
@@ -88,6 +89,34 @@ export function toolSummary(name, args = {}) {
 
 const SHOT_RE = /\/api\/desktop\/screenshots\/[^\s)"']+\.png/;
 
+/** Desktop screenshots are behind the session token, so load them with it. */
+function AuthedShot({ path }) {
+  const [src, setSrc] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    let objectUrl = '';
+    loadImage(path)
+      .then((url) => {
+        objectUrl = url;
+        if (alive) setSrc(url);
+        else URL.revokeObjectURL(url);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [path]);
+
+  if (!src) return null;
+  return (
+    <a className="tool-shot" href={src} target="_blank" rel="noreferrer">
+      <img src={src} alt="Orbit desktop screenshot" loading="lazy" />
+    </a>
+  );
+}
+
 function ToolIcon({ name }) {
   if (name === 'desktop_terminal') return <IconTerminal width={13} height={13} />;
   if (name === 'desktop_navigate' || name === 'desktop_launch') {
@@ -133,11 +162,7 @@ export default function ToolCard({ name, args, result, status = 'ok', defaultOpe
           {result !== undefined && (
             <>
               <div className="tool-label">Output</div>
-              {shot && (
-                <a className="tool-shot" href={shot} target="_blank" rel="noreferrer">
-                  <img src={shot} alt="Orbit desktop screenshot" loading="lazy" />
-                </a>
-              )}
+              {shot && <AuthedShot path={shot} />}
               <pre>{result || '(empty)'}</pre>
             </>
           )}

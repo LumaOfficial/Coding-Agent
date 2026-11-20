@@ -13,6 +13,7 @@ import StoreTests from './StoreTests.jsx';
 import Platforms from './Platforms.jsx';
 import PlatformCard from './PlatformCard.jsx';
 import KeyFreeIntegrations from './KeyFreeIntegrations.jsx';
+import { api, downloadFile, isExtension } from '../api.js';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -61,15 +62,29 @@ export default function RightPanel({
   async function openFile(path) {
     if (!session) return;
     try {
-      const res = await fetch(
-        `/api/sessions/${session.id}/file?path=${encodeURIComponent(path)}`
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Could not read file');
+      const data = await api.file(session.id, path);
       setViewing({ path, content: data.content });
     } catch (err) {
       setViewing({ path, content: `Could not read file: ${err.message}` });
     }
+  }
+
+  function downloadWorkspace() {
+    if (!session) return;
+    const slug = (session.title || 'workspace')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'workspace';
+    downloadFile(`/api/sessions/${session.id}/export.zip`, `${slug}.zip`).catch(() => {});
+  }
+
+  function downloadExtension() {
+    downloadFile('/api/browser/extension.zip', 'orbit-browser-extension.zip').catch(() => {});
+  }
+
+  function reconnectExtension() {
+    if (isExtension) chrome.runtime.sendMessage({ type: 'orbit:reconnect' });
   }
 
   async function copyContent() {
@@ -124,14 +139,10 @@ export default function RightPanel({
                 <IconFile width={14} height={14} />
               </button>
               {session && files.length > 0 && (
-                <a
-                  className="btn-small"
-                  href={`/api/sessions/${session.id}/export.zip`}
-                  download
-                >
+                <button className="btn-small" onClick={downloadWorkspace}>
                   <IconDownload width={13} height={13} />
                   ZIP
-                </a>
+                </button>
               )}
             </div>
           </div>
@@ -212,16 +223,30 @@ export default function RightPanel({
                 : 'Extension not connected'
             }
             description="Orbit works in the tab you have open: it reads the page, clicks, types and navigates — with its cursor visible on your screen. Anything that changes the page waits for an approval card in the chat first."
-            steps={[
-              'Download the extension ZIP below and unzip it',
-              'Open chrome://extensions, turn on Developer mode and choose Load unpacked → the unzipped folder',
-              'Open the Orbit extension popup, point it at this API and press Save & connect',
-            ]}
+            steps={
+              isExtension
+                ? [
+                    'This app is running as the Orbit extension',
+                    'Click the Orbit toolbar icon, point it at this API and press Save & connect',
+                    'Press Reconnect if the status stays offline',
+                  ]
+                : [
+                    'Download the extension ZIP below and unzip it',
+                    'Open chrome://extensions, turn on Developer mode and choose Load unpacked → the unzipped folder',
+                    'Open the Orbit extension popup, point it at this API and press Save & connect',
+                  ]
+            }
             action={
-              <a className="btn-small" href="/api/browser/extension.zip" download>
-                <IconDownload width={13} height={13} />
-                Extension ZIP
-              </a>
+              isExtension ? (
+                <button className="btn-small" onClick={reconnectExtension}>
+                  Reconnect
+                </button>
+              ) : (
+                <button className="btn-small" onClick={downloadExtension}>
+                  <IconDownload width={13} height={13} />
+                  Extension ZIP
+                </button>
+              )
             }
           />
 

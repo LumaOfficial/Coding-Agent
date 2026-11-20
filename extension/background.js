@@ -174,7 +174,14 @@ chrome.runtime.onMessage.addListener((message) => {
   connect();
 });
 
-chrome.runtime.onInstalled.addListener(() => connect());
+chrome.runtime.onInstalled.addListener((details) => {
+  connect();
+  // A fresh install opens the app itself, so the first thing the user sees is
+  // the chat — not an empty toolbar button.
+  if (details.reason === 'install') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('app/index.html') });
+  }
+});
 chrome.runtime.onStartup.addListener(() => connect());
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.apiUrl) {

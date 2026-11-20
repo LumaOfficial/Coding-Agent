@@ -145,6 +145,13 @@ export async function completeOnboarding(userId) {
 }
 
 export function readSessionToken(req) {
+  // The Chrome extension page calls the API from a chrome-extension:// origin,
+  // where the httpOnly cookie is not sent. It holds the same signed token and
+  // passes it as a bearer header instead.
+  const authorization = req.headers.authorization || '';
+  const bearer = /^Bearer\s+(.+)$/i.exec(authorization);
+  if (bearer) return bearer[1].trim();
+
   const header = req.headers.cookie || '';
   for (const part of header.split(';')) {
     const [key, ...rest] = part.trim().split('=');

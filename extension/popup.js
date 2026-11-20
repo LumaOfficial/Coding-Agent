@@ -1,4 +1,5 @@
 const DEFAULT_API = 'http://localhost:8000';
+const APP_PAGE = 'app/index.html';
 const $ = (id) => document.getElementById(id);
 
 async function render() {
@@ -14,6 +15,10 @@ async function render() {
         : status?.detail || 'Not connected';
 }
 
+function openApp() {
+  chrome.tabs.create({ url: chrome.runtime.getURL(APP_PAGE) });
+}
+
 $('save').onclick = async () => {
   const apiUrl = $('api').value.trim().replace(/\/+$/, '') || DEFAULT_API;
   await chrome.storage.local.set({ apiUrl });
@@ -23,6 +28,19 @@ $('save').onclick = async () => {
 $('reconnect').onclick = () => {
   chrome.runtime.sendMessage({ type: 'orbit:reconnect' });
   setTimeout(render, 400);
+};
+
+$('open').onclick = openApp;
+
+$('panel').onclick = async () => {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || tab.windowId === undefined) throw new Error('no window');
+    await chrome.sidePanel.open({ windowId: tab.windowId });
+    window.close();
+  } catch {
+    openApp();
+  }
 };
 
 chrome.storage.onChanged.addListener(() => render());
