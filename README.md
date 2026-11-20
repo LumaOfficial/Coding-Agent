@@ -11,8 +11,8 @@ via Cloudflare Workers AI — it is the only model the app offers.
 - **Its own browser** — `web_search` queries the live web (Bing, then DuckDuckGo instant answers,
   then Wikipedia) and `web_fetch` opens a public page and returns its readable text. No API key,
   no user tab; private/local addresses are refused.
-- **Your browser** — the Orbit extension (`extension/`, download it from Integrations → *Your
-  browser*) connects to the API over a WebSocket and lets Orbit work in the tab you already have
+- **Your browser** — the Orbit extension (`extension/` — load that folder unpacked, or download the
+  ZIP from Integrations → *Your browser*) connects to the API over a WebSocket and lets Orbit work in the tab you already have
   open. `browser_tabs`, `browser_snapshot` and `browser_screenshot` are read-only; `browser_open`,
   `browser_click`, `browser_type`, `browser_key` and `browser_scroll` publish an approval card in
   the chat and only run when you press **Allow**. The extension injects its content script on
@@ -64,6 +64,21 @@ via Cloudflare Workers AI — it is the only model the app offers.
 cd server && npm install && npm start     # API on :8000
 cd client && npm install && npm run dev   # UI on :5173, proxies /api
 ```
+
+## Install the browser extension
+
+Chrome loads the folder that **contains `manifest.json`** — in this repository that is
+`extension/`, not the repository root.
+
+1. Get the folder: download **Integrations → Your browser → Extension ZIP** from the app and unzip
+   it, or use `extension/` from a clone.
+2. From the GitHub repository ZIP, open the extracted `Coding-Agent-main` folder and go into
+   **`extension`**. Pointing *Load unpacked* at the repository root fails with "Manifest file is
+   missing or unreadable", because `manifest.json` sits one level down.
+3. Open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked** and select that
+   `extension` folder.
+4. Open the Orbit popup, point it at the API (`http://localhost:8000` by default) and press
+   **Save & connect**. The badge clears once the socket is open.
 
 ## Credentials
 

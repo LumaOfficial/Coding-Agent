@@ -214,7 +214,7 @@ export default function RightPanel({
             description="Orbit works in the tab you have open: it reads the page, clicks, types and navigates — with its cursor visible on your screen. Anything that changes the page waits for an approval card in the chat first."
             steps={[
               'Download the extension ZIP below and unzip it',
-              'Open chrome://extensions, turn on Developer mode and choose Load unpacked → the unzipped folder',
+              'Open chrome://extensions, turn on Developer mode and choose Load unpacked → the folder holding manifest.json (the extension folder if you unzipped the GitHub repo)',
               'Open the Orbit extension popup, point it at this API and press Save & connect',
             ]}
             action={

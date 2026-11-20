@@ -5,11 +5,23 @@
   "description": "Lets Orbit operate the tab you allow. Every click, type and navigation asks for your approval first.",
   "permissions": ["scripting", "tabs", "storage", "activeTab"],
   "host_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "background": {
     "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Orbit browser control"
+    "default_title": "Orbit browser control",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   }
 }
