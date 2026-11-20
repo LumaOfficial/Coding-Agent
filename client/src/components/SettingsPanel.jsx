@@ -143,6 +143,28 @@ export default function SettingsPanel({ open, settings, onChange, onReset, onClo
               value={settings.wrapCode}
               onChange={(value) => onChange({ wrapCode: value })}
             />
+            <Toggle
+              label="Background grid"
+              hint="The faint dot grid behind the conversation."
+              value={settings.grid}
+              onChange={(value) => onChange({ grid: value })}
+            />
+            <Toggle
+              label="Solid surfaces"
+              hint="Drop the frosted blur for flat, fully opaque panels."
+              value={settings.solidSurfaces}
+              onChange={(value) => onChange({ solidSurfaces: value })}
+            />
+            <Choice
+              label="Text size"
+              hint="How large messages and the composer read."
+              value={settings.textSize}
+              options={[
+                { value: 'normal', label: 'Normal' },
+                { value: 'large', label: 'Large' },
+              ]}
+              onChange={(value) => onChange({ textSize: value })}
+            />
           </Group>
 
           <Group title="Chat">
@@ -181,6 +203,24 @@ export default function SettingsPanel({ open, settings, onChange, onReset, onClo
               hint="Off: Enter adds a new line and Ctrl/⌘ + Enter sends."
               value={settings.enterToSend}
               onChange={(value) => onChange({ enterToSend: value })}
+            />
+            <Toggle
+              label="Message timestamps"
+              hint="Show the time each message was sent beside its label."
+              value={settings.timestamps}
+              onChange={(value) => onChange({ timestamps: value })}
+            />
+            <Toggle
+              label="Starter chips"
+              hint="The quick capability tags on the empty conversation screen."
+              value={settings.starters}
+              onChange={(value) => onChange({ starters: value })}
+            />
+            <Toggle
+              label="Expand tool details"
+              hint="Open every tool card's input and output by default."
+              value={settings.expandTools}
+              onChange={(value) => onChange({ expandTools: value })}
             />
           </Group>
 

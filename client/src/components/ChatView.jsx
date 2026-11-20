@@ -46,6 +46,13 @@ function safeArgs(raw) {
   }
 }
 
+function formatTime(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
 function Turn({
   role,
   content,
@@ -55,11 +62,17 @@ function Turn({
   streamingLabel = 'Thinking…',
   showTools = true,
   showDots = true,
+  expandTools = false,
+  at = '',
+  showTime = false,
 }) {
+  const time = showTime ? formatTime(at) : '';
   if (role === 'user') {
     return (
       <div className="turn turn-user" style={{ '--turn-index': index }}>
-        <div className="turn-tag">You</div>
+        <div className="turn-tag">
+          You{time ? <span className="turn-time">{time}</span> : null}
+        </div>
         <div className="turn-user-body">{content}</div>
       </div>
     );
@@ -71,6 +84,7 @@ function Turn({
           <IconSpark width={13} height={13} />
         </span>
         <span className="turn-tag">Orbit</span>
+        {time ? <span className="turn-time">{time}</span> : null}
       </div>
       <div className="turn-body">
         {content ? <Markdown>{content}</Markdown> : null}
@@ -82,6 +96,7 @@ function Turn({
                 args={card.args}
                 result={card.result}
                 status={card.status}
+                defaultOpen={expandTools}
               />
             ))
           : null}
@@ -103,7 +118,7 @@ function Turn({
   );
 }
 
-function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, idle = 'awake' }) {
+function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, starters = true, idle = 'awake' }) {
   return (
     <div className="empty">
       <div className="empty-mark">
@@ -126,15 +141,17 @@ function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, idle = 'awake' }) {
           onOpenStoreTests={onOpenStoreTests}
         />
       </div>
-      <div className="empty-chips">
-        <span className="chip">Auto-fix</span>
-        <span className="chip">Debug</span>
-        <span className="chip">Web search</span>
-        <span className="chip">Desktop</span>
-        <span className="chip">GitHub</span>
-        <span className="chip">Hugging Face</span>
-        <span className="chip">Store tests</span>
-      </div>
+      {starters && (
+        <div className="empty-chips">
+          <span className="chip">Auto-fix</span>
+          <span className="chip">Debug</span>
+          <span className="chip">Web search</span>
+          <span className="chip">Desktop</span>
+          <span className="chip">GitHub</span>
+          <span className="chip">Hugging Face</span>
+          <span className="chip">Store tests</span>
+        </div>
+      )}
       {idle !== 'awake' && (
         <div className="idle-note">
           <IconMoon width={13} height={13} />
@@ -279,6 +296,7 @@ export default function ChatView({
               onSend={onSend}
               onOpenPanel={onOpenPanel}
               onOpenStoreTests={onOpenStoreTests}
+              starters={prefs.starters}
               idle={idle}
             />
           ) : (
@@ -290,6 +308,9 @@ export default function ChatView({
                 cards={item.cards}
                 index={index}
                 showTools={prefs.showTools}
+                expandTools={prefs.expandTools}
+                at={item.created_at}
+                showTime={prefs.timestamps}
               />
             ))
           )}

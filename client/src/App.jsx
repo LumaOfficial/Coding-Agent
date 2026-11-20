@@ -346,7 +346,11 @@ export default function App() {
     <div
       className={`app ${full ? 'full' : ''} ${idle !== 'awake' ? idle : ''} ${
         settings.density === 'compact' ? 'compact' : ''
-      } ${settings.motion ? '' : 'no-motion'} ${settings.wrapCode ? 'wrap-code' : ''}`}
+      } ${settings.motion ? '' : 'no-motion'} ${settings.wrapCode ? 'wrap-code' : ''} ${
+        settings.grid ? '' : 'no-grid'
+      } ${settings.solidSurfaces ? 'solid' : ''} ${
+        settings.textSize === 'large' ? 'text-lg' : ''
+      }`}
       style={accentVars(settings.accent)}
     >
       <Ambient level={idle} effects={settings.ambient} spotlight={settings.spotlight} />

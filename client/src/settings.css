@@ -324,3 +324,31 @@
     gap: 10px;
   }
 }
+
+/* ---------------- new preferences ---------------- */
+
+.app.text-lg .turn-body,
+.app.text-lg .turn-user-body,
+.app.text-lg .composer textarea {
+  font-size: 15.5px;
+}
+
+.app.solid *,
+.app.solid *::before,
+.app.solid *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body:has(.app.no-grid)::before {
+  display: none;
+}
+
+.turn-time {
+  margin-left: 7px;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--muted);
+}

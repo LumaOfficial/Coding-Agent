@@ -11,6 +11,9 @@ export const DEFAULT_SETTINGS = {
   density: 'comfortable',
   accent: 'violet',
   wrapCode: false,
+  grid: true,
+  solidSurfaces: false,
+  textSize: 'normal',
 
   // Chat
   cosmicThinking: true,
@@ -19,6 +22,9 @@ export const DEFAULT_SETTINGS = {
   enterToSend: true,
   showStatus: true,
   showTools: true,
+  timestamps: false,
+  starters: true,
+  expandTools: false,
 
   // Agent
   autoFix: true,

@@ -106,8 +106,8 @@ function ToolIcon({ name }) {
   return <IconFile width={13} height={13} />;
 }
 
-export default function ToolCard({ name, args, result, status = 'ok' }) {
-  const [open, setOpen] = useState(name === 'desktop_screenshot');
+export default function ToolCard({ name, args, result, status = 'ok', defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen || name === 'desktop_screenshot');
   const summary = toolSummary(name, args);
   const shot = typeof result === 'string' ? result.match(SHOT_RE)?.[0] : null;
 
