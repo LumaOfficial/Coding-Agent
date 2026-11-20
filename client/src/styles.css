@@ -399,6 +399,8 @@ button {
 }
 
 .chat-header {
+  position: relative;
+  z-index: 20;
   flex: 0 0 auto;
   border-bottom: 1px solid var(--border-soft);
   background: rgba(8, 10, 15, 0.82);
