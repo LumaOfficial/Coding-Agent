@@ -35,6 +35,7 @@ import {
   resolveApproval,
   subscribeSession,
 } from './browser.js';
+import { resolveConsent } from './consent.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
@@ -169,6 +170,12 @@ app.post('/api/browser/approve', (req, res) => {
   const id = String(req.body?.id || '');
   if (!id) return res.status(400).json({ error: 'id is required' });
   res.json({ ok: resolveApproval(id, Boolean(req.body?.approved)) });
+});
+
+app.post('/api/consent/approve', (req, res) => {
+  const id = String(req.body?.id || '');
+  if (!id) return res.status(400).json({ error: 'id is required' });
+  res.json({ ok: resolveConsent(id, Boolean(req.body?.approved)) });
 });
 
 app.get('/api/browser/extension.zip', (req, res) => {

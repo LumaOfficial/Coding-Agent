@@ -2405,6 +2405,38 @@ button {
   margin-top: 10px;
 }
 
+.consent-risk {
+  display: inline-block;
+  margin-right: 7px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 176, 92, 0.35);
+  background: rgba(255, 176, 92, 0.14);
+  color: #ffc07a;
+  font-size: 10px;
+  font-weight: 620;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.consent-risk.destructive {
+  border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff9d9d;
+}
+
+.consent-risk.shell {
+  border-color: rgba(126, 231, 196, 0.35);
+  background: rgba(126, 231, 196, 0.13);
+  color: #8ff0cd;
+}
+
+.consent-risk.external {
+  border-color: rgba(111, 168, 255, 0.4);
+  background: rgba(111, 168, 255, 0.15);
+  color: #a8c8ff;
+}
+
 .btn-small.primary {
   border-color: transparent;
   background: linear-gradient(135deg, #8b6cff, #6f8cff);

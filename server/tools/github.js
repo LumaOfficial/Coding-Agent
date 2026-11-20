@@ -1,3 +1,5 @@
+import { requestConsent, declined } from '../consent.js';
+
 const API = 'https://api.github.com';
 
 function token() {
@@ -178,7 +180,16 @@ export const handlers = {
     return Buffer.from(data.content, 'base64').toString('utf8');
   },
 
-  async github_create_branch(args) {
+  async github_create_branch(args, ctx) {
+    const allowed = await requestConsent(ctx, {
+      action: 'github_create_branch',
+      title: 'Create a branch on GitHub?',
+      summary: ` ${args.owner}/${args.repo} · ${args.branch}${args.from ? ` from ${args.from}` : ''}`,
+      detail: 'This adds a branch to the repository on GitHub.',
+      risk: 'external',
+    });
+    if (!allowed) return declined('branch creation');
+
     const info = await gh(`/repos/${args.owner}/${args.repo}`);
     const source = args.from || info.default_branch;
     const ref = await gh(`/repos/${args.owner}/${args.repo}/git/ref/heads/${source}`);
@@ -189,7 +200,16 @@ export const handlers = {
     return `Created branch ${args.branch} from ${source} (${ref.object.sha.slice(0, 7)})`;
   },
 
-  async github_commit_file(args) {
+  async github_commit_file(args, ctx) {
+    const allowed = await requestConsent(ctx, {
+      action: 'github_commit_file',
+      title: 'Commit a file to GitHub?',
+      summary: ` ${args.owner}/${args.repo}@${args.branch} · ${args.path}`,
+      detail: `Commit message: “${args.message}”`,
+      risk: 'external',
+    });
+    if (!allowed) return declined('commit');
+
     const base = `/repos/${args.owner}/${args.repo}/contents/${encodeURIComponent(args.path)}`;
     let sha;
     try {
@@ -210,7 +230,16 @@ export const handlers = {
     return `${sha ? 'Updated' : 'Created'} ${args.path} on ${args.branch} — commit ${data.commit?.sha?.slice(0, 7)}`;
   },
 
-  async github_open_pull_request(args) {
+  async github_open_pull_request(args, ctx) {
+    const allowed = await requestConsent(ctx, {
+      action: 'github_open_pull_request',
+      title: 'Open a pull request?',
+      summary: ` ${args.owner}/${args.repo} · ${args.head} → ${args.base}`,
+      detail: `Title: “${args.title}”`,
+      risk: 'external',
+    });
+    if (!allowed) return declined('pull request');
+
     const data = await gh(`/repos/${args.owner}/${args.repo}/pulls`, {
       method: 'POST',
       body: {

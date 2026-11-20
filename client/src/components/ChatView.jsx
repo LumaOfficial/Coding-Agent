@@ -4,6 +4,7 @@ import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
 import ScanCard from './ScanCard.jsx';
 import BrowserCard from './BrowserCard.jsx';
+import ConsentCard from './ConsentCard.jsx';
 import ToolsMenu from './ToolsMenu.jsx';
 import { COSMIC_THOUGHTS, toolActivity, useRotatingMessage } from '../lib/status.js';
 import { IconAlert, IconMenu, IconMoon, IconPanel, IconSpark } from './Icons.jsx';
@@ -149,6 +150,9 @@ export default function ChatView({
   browserRequest,
   browserBusy,
   onBrowserApprove,
+  consentRequest,
+  consentBusy,
+  onConsentApprove,
   panelOpen,
   onTogglePanel,
   onToggleSidebar,
@@ -283,6 +287,13 @@ export default function ChatView({
       </div>
 
       <div className="composer-wrap">
+        {consentRequest && (
+          <ConsentCard
+            request={consentRequest}
+            busy={consentBusy}
+            onApprove={onConsentApprove}
+          />
+        )}
         {browserRequest && (
           <BrowserCard
             request={browserRequest}

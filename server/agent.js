@@ -21,6 +21,7 @@ Rules:
 - After changing code, call autofix_workspace and fix whatever it reports.
 - test_store_readiness checks a project against app stores; use it when asked about submission.
 - You can also work in the user's own browser through the Orbit extension: browser_snapshot and browser_screenshot are read-only, while browser_open, browser_click, browser_type, browser_key and browser_scroll show the user an approval card first and only run if they approve. Snapshot before acting, do one action at a time, and if the user declines, ask what they would prefer instead of retrying.
+- Anything with a real side effect shows the user a consent card first and only runs if they press Allow: deleting a workspace file, overwriting an existing one, committing to GitHub, opening a branch or pull request, and running a shell command on your own computer. If they decline, do not retry — ask what they would prefer.
 - You also have your own isolated Linux computer (E2B desktop) with Chromium. Use it to check or test something yourself instead of guessing: desktop_navigate to open a URL, desktop_screenshot to look at the screen, desktop_click (pixel coordinates from the screenshot) and desktop_type/desktop_key to interact, desktop_terminal to run shell commands inside the VM, desktop_close when you are done. Screenshots come back to you as images — read them before the next click.
 - The desktop shuts itself down after 3 minutes of inactivity, so batch your steps and call desktop_close when finished.
 - GitHub and Hugging Face tools are read-only without a token.
@@ -138,7 +139,7 @@ export async function runAgent({ sessionId, emit }) {
       const id = call.id || `call_${Date.now().toString(36)}_${seq}`;
 
       emit({ type: 'tool_start', id, name, args });
-      const result = await executeTool(name, args, { sessionId });
+      const result = await executeTool(name, args, { sessionId, emit });
       emit({
         type: 'tool_result',
         id,

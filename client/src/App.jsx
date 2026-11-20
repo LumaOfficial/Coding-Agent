@@ -23,6 +23,8 @@ export default function App() {
   const [error, setError] = useState('');
   const [browserRequest, setBrowserRequest] = useState(null);
   const [browserBusy, setBrowserBusy] = useState(false);
+  const [consentRequest, setConsentRequest] = useState(null);
+  const [consentBusy, setConsentBusy] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState('files');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -166,6 +168,20 @@ export default function App() {
     }
   }
 
+  async function approveConsent(approved) {
+    if (!consentRequest) return;
+    const id = consentRequest.id;
+    setConsentBusy(true);
+    setConsentRequest(null);
+    try {
+      await api.approveConsent(id, approved);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setConsentBusy(false);
+    }
+  }
+
   async function changeModel(next) {
     setModel(next);
     if (session) {
@@ -231,6 +247,8 @@ export default function App() {
             );
           } else if (event.type === 'browser_request') {
             setBrowserRequest(event);
+          } else if (event.type === 'consent_request') {
+            setConsentRequest(event);
           } else if (event.type === 'error') {
             setError(event.message);
           }
@@ -241,6 +259,7 @@ export default function App() {
     } finally {
       setStreaming(false);
       setBrowserRequest(null);
+      setConsentRequest(null);
       abortRef.current = null;
       try {
         const data = await api.session(sid);
@@ -319,6 +338,9 @@ export default function App() {
           browserRequest={browserRequest}
           browserBusy={browserBusy}
           onBrowserApprove={approveBrowser}
+          consentRequest={consentRequest}
+          consentBusy={consentBusy}
+          onConsentApprove={approveConsent}
           panelOpen={panelOpen}
           onTogglePanel={() => setPanelOpen((v) => !v)}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}

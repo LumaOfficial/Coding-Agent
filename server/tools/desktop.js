@@ -5,6 +5,7 @@
  */
 
 import { closeDesktop, saveScreenshot, withDesktop, IDLE_MS } from '../desktop.js';
+import { requestConsent, declined } from '../consent.js';
 
 const LAUNCH = 'google-chrome';
 
@@ -285,6 +286,15 @@ export const handlers = {
     const command = String(args?.command || '').trim();
     if (!command) throw new Error('desktop_terminal needs a command.');
     const cwd = String(args?.cwd || '/home/user');
+
+    const allowed = await requestConsent(ctx, {
+      action: 'desktop_terminal',
+      title: "Run a shell command on Orbit's computer?",
+      summary: ` ${command}`,
+      detail: `Runs in ${cwd} inside the isolated Linux machine. Nothing touches your own computer.`,
+      risk: 'shell',
+    });
+    if (!allowed) return declined('command');
 
     return withDesktop(ctx.sessionId, async (sandbox) => {
       const out = await sandbox.commands.run(command, { cwd, timeoutMs: 120_000 });

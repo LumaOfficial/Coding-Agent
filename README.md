@@ -19,6 +19,11 @@ via Cloudflare Workers AI — it is the only model the app offers.
   demand (`scripting` + `<all_urls>` host access), moves a visible Orbit cursor, dispatches real
   clicks and types character by character, then returns a screenshot. Point its popup at the API
   (`http://localhost:8000` by default). Declining tells the agent to stop and ask what you want.
+- **Consent cards** — anything with a real side effect asks first in the chat and only runs when
+  you press **Allow**: deleting a workspace file, overwriting an existing one, committing to
+  GitHub, creating a branch, opening a pull request, and running a shell command on Orbit's own
+  computer. Each card names the action and its risk; declining tells the agent to stop and ask
+  what you want instead. Plain new-file writes never ask.
 - **Its own computer** — an isolated E2B Linux desktop with Chromium. Gemma 4 launches Chrome,
   opens URLs, clicks coordinates, types, runs shell commands and captures screenshots to check
   its own work (`desktop_launch`, `desktop_navigate`, `desktop_click`, `desktop_type`,

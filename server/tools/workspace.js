@@ -4,6 +4,16 @@ import {
   deleteWorkspaceFile,
   listWorkspaceFiles,
 } from '../store.js';
+import { requestConsent, declined } from '../consent.js';
+
+async function fileExists(sessionId, relPath) {
+  try {
+    await readWorkspaceFile(sessionId, relPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export const definitions = [
   {
@@ -58,6 +68,16 @@ export const definitions = [
 
 export const handlers = {
   async write_file(args, ctx) {
+    if (await fileExists(ctx.sessionId, args.path)) {
+      const allowed = await requestConsent(ctx, {
+        action: 'write_file',
+        title: 'Overwrite an existing file?',
+        summary: ` ${args.path}`,
+        detail: 'The file already exists in the workspace — its current contents will be replaced.',
+        risk: 'write',
+      });
+      if (!allowed) return declined('overwrite');
+    }
     const path = await writeWorkspaceFile(ctx.sessionId, args.path, args.content ?? '');
     return `Wrote ${(args.content ?? '').length} characters to ${path}`;
   },
@@ -70,6 +90,14 @@ export const handlers = {
     return files.map((f) => `${f.path} (${f.size} bytes)`).join('\n');
   },
   async delete_file(args, ctx) {
+    const allowed = await requestConsent(ctx, {
+      action: 'delete_file',
+      title: 'Delete this from the workspace?',
+      summary: ` ${args.path}`,
+      detail: 'The file or folder is removed from this session. This cannot be undone.',
+      risk: 'destructive',
+    });
+    if (!allowed) return declined('delete');
     await deleteWorkspaceFile(ctx.sessionId, args.path);
     return `Deleted ${args.path}`;
   },

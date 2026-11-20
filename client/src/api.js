@@ -33,6 +33,8 @@ export const api = {
   browserStatus: () => request('/api/browser/status'),
   approveBrowser: (id, approved) =>
     request('/api/browser/approve', { method: 'POST', body: { id, approved } }),
+  approveConsent: (id, approved) =>
+    request('/api/consent/approve', { method: 'POST', body: { id, approved } }),
   storeTests: (id, targets) =>
     request(`/api/sessions/${id}/store-tests`, { method: 'POST', body: { targets } }),
 };

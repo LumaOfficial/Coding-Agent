@@ -43,6 +43,11 @@ export async function executeTool(name, args, ctx) {
   try {
     const result = await handler(args || {}, ctx);
 
+    // A handler that was declined returns its own ok/content verdict.
+    if (result && typeof result === 'object' && typeof result.ok === 'boolean') {
+      return { ok: result.ok, content: String(result.content || '').slice(0, MAX_RESULT) };
+    }
+
     // Desktop tools can return { text, image } so the model sees the screen.
     if (result && typeof result === 'object' && typeof result.image === 'string') {
       return {
