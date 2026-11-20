@@ -42,7 +42,7 @@ via Cloudflare Workers AI — it is the only model the app offers.
 - **VS Code** — `generate_vscode_workspace` adds a `.code-workspace`, `.vscode/settings.json` and `tasks.json`; export the ZIP and open the folder.
 - **Platform detection** — `GET /api/platform` reports the OS, container, runtime, shell, editor,
   CI, git repo and installed tools of the machine the agent runs on.
-- **45 platforms** — the **Integrations** tab lists a catalog of 45 services (code hosting, deploy,
+- **71 platforms** — the **Integrations** tab lists a catalog of 71 services (code hosting, deploy,
   package registries, backend & data, AI & ML, design, team & comms, monitoring, editor). Each row
   shows whether it is connected (its env var is present), readable without a token, or needs a
   token. `list_platforms` gives the agent the same list and `platform_request` reads a path from a
@@ -82,7 +82,7 @@ their tokens.
 - `POST /api/sessions/:id/store-tests` — runs the store readiness checks (`targets` optional) and
   returns the per-store report as JSON.
 - `GET /api/stores` — the store catalog the tests cover.
-- `GET /api/platforms` — the 45-platform catalog with live connection state.
+- `GET /api/platforms` — the 71-platform catalog with live connection state.
 - `GET /api/platform` — environment detection.
 
 ## Layout
