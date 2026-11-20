@@ -18,6 +18,7 @@ import { runAgent } from './agent.js';
 import { MODEL, configStatus } from './cloudflare.js';
 import { fixWorkspace, scanWorkspace } from './autofix.js';
 import { detectPlatform } from './platform.js';
+import { listPlatforms } from './platforms.js';
 import { listStoreTargets, runStoreTests } from './stores.js';
 
 const app = express();
@@ -33,6 +34,10 @@ app.get('/api/models', (req, res) => {
 
 app.get('/api/platform', (req, res) => {
   res.json(detectPlatform(req.headers));
+});
+
+app.get('/api/platforms', (req, res) => {
+  res.json({ platforms: listPlatforms() });
 });
 
 app.get('/api/stores', (req, res) => {

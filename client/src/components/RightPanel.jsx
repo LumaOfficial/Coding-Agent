@@ -6,11 +6,10 @@ import {
   IconCopy,
   IconDownload,
   IconFile,
-  IconGithub,
   IconSpark,
-  IconTerminal,
 } from './Icons.jsx';
 import StoreTests from './StoreTests.jsx';
+import Platforms from './Platforms.jsx';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -79,9 +78,6 @@ export default function RightPanel({
       /* ignore */
     }
   }
-
-  const github = integrations?.github;
-  const hf = integrations?.huggingface;
 
   return (
     <aside className="panel">
@@ -185,88 +181,7 @@ export default function RightPanel({
             ]}
           />
 
-          <IntegrationCard
-            icon={<IconGithub width={15} height={15} />}
-            title="GitHub"
-            connected={github?.connected || github?.ok}
-            statusText={
-              github?.connected
-                ? `Signed in as ${github.login}`
-                : github?.ok
-                  ? 'Public read · no token needed'
-                  : github?.error || 'Unavailable'
-            }
-            description="Searches public repos, lists files and reads any file with no token — 60 requests an hour anonymously. A token is only needed for commits and pull requests."
-            steps={[
-              'Optional: create a fine-grained or classic token with repo scope',
-              'Add it as GITHUB_TOKEN to unlock commits and pull requests',
-            ]}
-            action={
-              <a
-                className="btn-small ghost"
-                href="https://github.com/settings/tokens"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Create token
-              </a>
-            }
-          />
-
-          <IntegrationCard
-            icon={<IconSpark width={15} height={15} />}
-            title="Hugging Face"
-            connected={hf?.connected || hf?.ok}
-            statusText={
-              hf?.connected
-                ? `Signed in as ${hf.name}`
-                : hf?.ok
-                  ? 'Public search · no token needed'
-                  : hf?.error || 'Unavailable'
-            }
-            description="Searches models, datasets and spaces and reads model cards with no token. A token only adds private repos and higher rate limits."
-            steps={[
-              'Create a read token at huggingface.co/settings/tokens',
-              'Add it as HF_TOKEN in the secrets panel',
-            ]}
-            action={
-              <a
-                className="btn-small ghost"
-                href="https://huggingface.co/settings/tokens"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Create token
-              </a>
-            }
-          />
-
-          <div className="integration">
-            <div className="integration-head">
-              <span className="integration-icon">
-                <IconTerminal width={15} height={15} />
-              </span>
-              <div className="integration-titles">
-                <div className="integration-title">VS Code</div>
-                <div className="integration-status">
-                  <IconCheck width={12} height={12} />
-                  Export available
-                </div>
-              </div>
-            </div>
-            <p className="integration-desc">
-              Download the workspace as a ZIP, unzip it, then open the folder (or the{' '}
-              <code>.code-workspace</code> file) in VS Code.
-            </p>
-            {session && files.length > 0 ? (
-              <a className="btn-small" href={`/api/sessions/${session.id}/export.zip`} download>
-                <IconDownload width={13} height={13} />
-                Download workspace
-              </a>
-            ) : (
-              <span className="muted-note">No files to export yet.</span>
-            )}
-          </div>
+          <Platforms />
         </div>
       ) : (
         <div className="panel-body">

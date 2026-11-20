@@ -18,6 +18,7 @@ async function request(path, { method = 'GET', body } = {}) {
 export const api = {
   models: () => request('/api/models'),
   integrations: () => request('/api/integrations'),
+  platforms: () => request('/api/platforms'),
   sessions: () => request('/api/sessions'),
   createSession: (body = {}) => request('/api/sessions', { method: 'POST', body }),
   session: (id) => request(`/api/sessions/${id}`),
