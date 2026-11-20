@@ -14,7 +14,19 @@ import {
   listWorkspaceFiles,
   readWorkspaceFile,
   workspaceDir,
+  claimOwnerlessSessions,
 } from './store.js';
+import {
+  apiAuth,
+  clearSessionCookie,
+  initAuth,
+  issueToken,
+  readSessionToken,
+  revokeToken,
+  setSessionCookie,
+  signIn,
+  signUp,
+} from './auth.js';
 import { runAgent } from './agent.js';
 import { MODEL, configStatus } from './cloudflare.js';
 import { fixWorkspace, scanWorkspace } from './autofix.js';
@@ -42,8 +54,40 @@ const PORT = Number(process.env.PORT || 8000);
 const extensionDir = fileURLToPath(new URL('../extension', import.meta.url));
 
 app.use(express.json({ limit: '8mb' }));
+app.use('/api', apiAuth);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+app.get('/api/auth/me', (req, res) => {
+  res.json({ user: req.user || null });
+});
+
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const user = await signUp(req.body || {});
+    await claimOwnerlessSessions(user.id);
+    setSessionCookie(res, await issueToken(user.id));
+    res.status(201).json({ user });
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message || 'Could not create the account.' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const user = await signIn(req.body || {});
+    setSessionCookie(res, await issueToken(user.id));
+    res.json({ user });
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message || 'Could not sign in.' });
+  }
+});
+
+app.post('/api/auth/logout', async (req, res) => {
+  await revokeToken(readSessionToken(req));
+  clearSessionCookie(res);
+  res.json({ ok: true });
+});
 
 app.get('/api/models', (req, res) => {
   res.json({ models: [MODEL], default: MODEL.id, mode: 'cloudflare' });
@@ -188,21 +232,31 @@ app.get('/api/browser/extension.zip', (req, res) => {
   archive.finalize();
 });
 
+async function ownedSession(req, res) {
+  const session = await getSession(req.params.id);
+  if (!session || session.owner !== req.user.id) {
+    res.status(404).json({ error: 'Session not found' });
+    return null;
+  }
+  return session;
+}
+
 app.get('/api/sessions', async (req, res) => {
-  res.json({ sessions: await listSessions() });
+  res.json({ sessions: await listSessions(req.user.id) });
 });
 
 app.post('/api/sessions', async (req, res) => {
   const session = await createSession({
     title: req.body?.title || 'New session',
     model: MODEL.id,
+    owner: req.user.id,
   });
   res.status(201).json({ session });
 });
 
 app.get('/api/sessions/:id', async (req, res) => {
-  const session = await getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const session = await ownedSession(req, res);
+  if (!session) return;
   const [messages, files] = await Promise.all([
     getMessages(req.params.id),
     listWorkspaceFiles(req.params.id),
@@ -211,6 +265,7 @@ app.get('/api/sessions/:id', async (req, res) => {
 });
 
 app.patch('/api/sessions/:id', async (req, res) => {
+  if (!(await ownedSession(req, res))) return;
   const session = await updateSession(req.params.id, {
     ...(req.body?.title !== undefined ? { title: req.body.title } : {}),
     ...(req.body?.model !== undefined ? { model: req.body.model } : {}),
@@ -220,23 +275,25 @@ app.patch('/api/sessions/:id', async (req, res) => {
 });
 
 app.delete('/api/sessions/:id', async (req, res) => {
+  if (!(await ownedSession(req, res))) return;
   await closeDesktop(req.params.id);
   await deleteSession(req.params.id);
   res.json({ ok: true });
 });
 
 app.post('/api/sessions/:id/desktop/close', async (req, res) => {
+  if (!(await ownedSession(req, res))) return;
   const closed = await closeDesktop(req.params.id);
   res.json({ ok: true, closed });
 });
 
 app.get('/api/sessions/:id/workspace', async (req, res) => {
-  const session = await getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (!(await ownedSession(req, res))) return;
   res.json({ files: await listWorkspaceFiles(req.params.id) });
 });
 
 app.get('/api/sessions/:id/file', async (req, res) => {
+  if (!(await ownedSession(req, res))) return;
   try {
     const content = await readWorkspaceFile(req.params.id, String(req.query.path || ''));
     res.json({ path: req.query.path, content });
@@ -246,8 +303,8 @@ app.get('/api/sessions/:id/file', async (req, res) => {
 });
 
 app.get('/api/sessions/:id/export.zip', async (req, res) => {
-  const session = await getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const session = await ownedSession(req, res);
+  if (!session) return;
 
   const slug = (session.title || 'workspace')
     .toLowerCase()
@@ -266,8 +323,8 @@ app.get('/api/sessions/:id/export.zip', async (req, res) => {
 });
 
 app.post('/api/sessions/:id/chat', async (req, res) => {
-  const session = await getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  const session = await ownedSession(req, res);
+  if (!session) return;
 
   const message = String(req.body?.message || '').trim();
   const model = MODEL.id;
@@ -314,8 +371,7 @@ app.post('/api/sessions/:id/chat', async (req, res) => {
 });
 
 app.post('/api/sessions/:id/store-tests', async (req, res) => {
-  const session = await getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (!(await ownedSession(req, res))) return;
   try {
     res.json(await runStoreTests(req.params.id, req.body?.targets));
   } catch (error) {
@@ -324,8 +380,7 @@ app.post('/api/sessions/:id/store-tests', async (req, res) => {
 });
 
 app.get('/api/sessions/:id/scan', async (req, res) => {
-  const session = await getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (!(await ownedSession(req, res))) return;
   try {
     res.json(await scanWorkspace(req.params.id));
   } catch (error) {
@@ -334,8 +389,7 @@ app.get('/api/sessions/:id/scan', async (req, res) => {
 });
 
 app.post('/api/sessions/:id/autofix', async (req, res) => {
-  const session = await getSession(req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (!(await ownedSession(req, res))) return;
   try {
     res.json(await fixWorkspace(req.params.id));
   } catch (error) {
@@ -344,6 +398,7 @@ app.post('/api/sessions/:id/autofix', async (req, res) => {
 });
 
 await init();
+await initAuth();
 
 for (const signal of ['SIGTERM', 'SIGINT']) {
   process.once(signal, () => {

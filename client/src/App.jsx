@@ -4,11 +4,14 @@ import Sidebar from './components/Sidebar.jsx';
 import ChatView from './components/ChatView.jsx';
 import RightPanel from './components/RightPanel.jsx';
 import Ambient from './components/Ambient.jsx';
+import AuthScreen, { AuthBoot } from './components/AuthScreen.jsx';
 import useIdle from './lib/useIdle.js';
 import useBrowserLayout from './lib/useBrowserLayout.js';
 
 export default function App() {
   const full = useBrowserLayout();
+  const [user, setUser] = useState(null);
+  const [booting, setBooting] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -109,7 +112,26 @@ export default function App() {
     }
   }, []);
 
+  // Restore the signed-in account from the httpOnly session cookie.
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await api.me();
+        if (!cancelled) setUser(me.user || null);
+      } catch {
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setBooting(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return undefined;
     let cancelled = false;
     (async () => {
       try {
@@ -121,13 +143,13 @@ export default function App() {
         setSessions(s.sessions);
         // Always start on a fresh chat; past sessions stay in the sidebar.
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) setError(err.message);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [openSession]);
+  }, [user, openSession]);
 
   async function newSession() {
     abortRef.current?.abort();
@@ -307,6 +329,28 @@ export default function App() {
     }
   }
 
+  async function signOut() {
+    abortRef.current?.abort();
+    try {
+      await api.logout();
+    } catch {
+      /* sign out locally even if the request fails */
+    }
+    activeIdRef.current = null;
+    setUser(null);
+    setSessions([]);
+    setSession(null);
+    setMessages([]);
+    setFiles([]);
+    setIntegrations(null);
+    setError('');
+    setSidebarOpen(false);
+    setPanelOpen(false);
+  }
+
+  if (booting) return <AuthBoot />;
+  if (!user) return <AuthScreen onAuthed={setUser} />;
+
   return (
     <div className={`app ${full ? 'full' : ''} ${idle !== 'awake' ? idle : ''}`}>
       <Ambient level={idle} />
@@ -320,6 +364,8 @@ export default function App() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         idle={idle}
+        user={user}
+        onSignOut={signOut}
       />
 
       <main className="main">

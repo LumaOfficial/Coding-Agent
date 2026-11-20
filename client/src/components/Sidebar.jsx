@@ -1,4 +1,4 @@
-import { IconPlus, IconSpark, IconTrash } from './Icons.jsx';
+import { IconLogout, IconPlus, IconSpark, IconTrash } from './Icons.jsx';
 
 function relativeTime(iso) {
   if (!iso) return '';
@@ -27,6 +27,8 @@ export default function Sidebar({
   open,
   onClose,
   idle = 'awake',
+  user = null,
+  onSignOut,
 }) {
   const github = integrations?.github;
   const hf = integrations?.huggingface;
@@ -99,6 +101,25 @@ export default function Sidebar({
         </div>
 
         <div className="sidebar-footer">
+          {user && (
+            <div className="user-row">
+              <span className="user-avatar">
+                {(user.name || user.email || '?').slice(0, 1).toUpperCase()}
+              </span>
+              <div className="user-text">
+                <div className="user-name">{user.name || 'Signed in'}</div>
+                <div className="user-email">{user.email}</div>
+              </div>
+              <button
+                className="icon-btn user-signout"
+                title="Sign out"
+                aria-label="Sign out"
+                onClick={onSignOut}
+              >
+                <IconLogout width={15} height={15} />
+              </button>
+            </div>
+          )}
           <div className="status-row">
             <StatusDot ok={engineOk} />
             <span>Engine</span>

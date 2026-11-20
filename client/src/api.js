@@ -1,6 +1,7 @@
 async function request(path, { method = 'GET', body } = {}) {
   const res = await fetch(path, {
     method,
+    credentials: 'same-origin',
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -16,6 +17,10 @@ async function request(path, { method = 'GET', body } = {}) {
 }
 
 export const api = {
+  me: () => request('/api/auth/me'),
+  signup: (body) => request('/api/auth/signup', { method: 'POST', body }),
+  login: (body) => request('/api/auth/login', { method: 'POST', body }),
+  logout: () => request('/api/auth/logout', { method: 'POST' }),
   models: () => request('/api/models'),
   integrations: () => request('/api/integrations'),
   platform: () => request('/api/platform'),
@@ -42,6 +47,7 @@ export const api = {
 export async function streamChat({ sessionId, message, model, signal, onEvent }) {
   const res = await fetch(`/api/sessions/${sessionId}/chat`, {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, model }),
     signal,

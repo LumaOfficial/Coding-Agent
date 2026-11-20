@@ -26,7 +26,7 @@ export async function init() {
   await mkdir(SESSIONS_DIR, { recursive: true });
 }
 
-export async function listSessions() {
+export async function listSessions(owner) {
   let ids = [];
   try {
     ids = await readdir(SESSIONS_DIR);
@@ -42,14 +42,33 @@ export async function listSessions() {
     })
   );
   return sessions
-    .filter(Boolean)
+    .filter((session) => session && (!owner || session.owner === owner))
     .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
 }
 
-export async function createSession({ title = 'New session', model = 'cloudflare/gemma-4-26b-a4b-it' } = {}) {
+/** Sessions created before accounts existed have no owner; the first account claims them. */
+export async function claimOwnerlessSessions(owner) {
+  let ids = [];
+  try {
+    ids = await readdir(SESSIONS_DIR);
+  } catch {
+    return 0;
+  }
+  let claimed = 0;
+  for (const id of ids) {
+    const meta = await readJson(metaFile(id), null);
+    if (meta && !meta.owner) {
+      await writeJson(metaFile(id), { ...meta, owner });
+      claimed += 1;
+    }
+  }
+  return claimed;
+}
+
+export async function createSession({ title = 'New session', model = 'cloudflare/gemma-4-26b-a4b-it', owner = null } = {}) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
-  const meta = { id, title, model, created_at: now, updated_at: now };
+  const meta = { id, title, model, owner, created_at: now, updated_at: now };
   await mkdir(workspaceDir(id), { recursive: true });
   await writeJson(metaFile(id), meta);
   await writeJson(messagesFile(id), []);

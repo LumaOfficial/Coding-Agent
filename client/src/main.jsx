@@ -4,5 +4,6 @@ import App from './App.jsx';
 import './styles.css';
 import './animations.css';
 import './effects.css';
+import './auth.css';
 
 createRoot(document.getElementById('root')).render(<App />);
