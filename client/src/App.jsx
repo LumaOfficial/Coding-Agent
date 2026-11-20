@@ -10,7 +10,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [models, setModels] = useState([]);
-  const [model, setModel] = useState('local/autofix');
+  const [model, setModel] = useState('cloudflare/gemma-4-26b-a4b-instruct');
   const [integrations, setIntegrations] = useState(null);
   const [streaming, setStreaming] = useState(false);
   const [liveText, setLiveText] = useState('');
@@ -299,6 +299,10 @@ export default function App() {
           onApplyFixes={applyFixes}
           onOpenStoreTests={() => {
             setPanelTab('stores');
+            setPanelOpen(true);
+          }}
+          onOpenPanel={(tab) => {
+            setPanelTab(tab);
             setPanelOpen(true);
           }}
         />

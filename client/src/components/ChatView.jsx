@@ -3,56 +3,8 @@ import Markdown from './Markdown.jsx';
 import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
 import ScanCard from './ScanCard.jsx';
-import {
-  IconAlert,
-  IconCheck,
-  IconFile,
-  IconGithub,
-  IconMenu,
-  IconPanel,
-  IconSpark,
-  IconTerminal,
-} from './Icons.jsx';
-
-const SUGGESTIONS = [
-  {
-    icon: <IconSpark width={14} height={14} />,
-    title: 'Fix my workspace',
-    prompt: 'Fix the code in my workspace and debug it.',
-  },
-  {
-    icon: <IconAlert width={14} height={14} />,
-    title: 'Debug everything',
-    prompt: 'Debug my workspace and show every syntax error and missing import with file and line.',
-  },
-  {
-    icon: <IconGithub width={14} height={14} />,
-    title: 'Search GitHub',
-    prompt: 'Search GitHub for a react dashboard starter',
-  },
-  {
-    icon: <IconFile width={14} height={14} />,
-    title: 'Find a Hugging Face model',
-    prompt: 'Search Hugging Face for a sentiment analysis model',
-  },
-  {
-    icon: <IconTerminal width={14} height={14} />,
-    title: 'Check a snippet',
-    prompt:
-      'Check this snippet and fix it:\n\n```js\nfunction add(a, b) {\n  return a + b\n}\n\nconst total = add(1, 2;\n```',
-  },
-  {
-    icon: <IconPanel width={14} height={14} />,
-    title: 'Detect my platform',
-    prompt: 'What coding platform am I on?',
-  },
-  {
-    icon: <IconCheck width={14} height={14} />,
-    title: 'Test store readiness',
-    prompt:
-      'Run store readiness tests on my workspace for the Chrome Web Store, Google Play, the Apple App Store and Firefox Add-ons, and show what is missing.',
-  },
-];
+import ToolsMenu from './ToolsMenu.jsx';
+import { IconAlert, IconMenu, IconPanel, IconSpark } from './Icons.jsx';
 
 function buildTimeline(messages) {
   const results = new Map();
@@ -131,28 +83,27 @@ function Turn({ role, content, cards = [], streaming = false }) {
   );
 }
 
-function EmptyState({ onPick }) {
+function EmptyState({ onSend, onOpenPanel, onOpenStoreTests }) {
   return (
     <div className="empty">
       <div className="empty-mark">
         <IconSpark width={24} height={24} />
       </div>
-      <span className="empty-eyebrow">Local engine · no API key</span>
+      <span className="empty-eyebrow">Cloudflare Workers AI · Gemma 4</span>
       <h1 className="empty-title">
-        Fix with <span className="grad">Forge</span>
+        Build with <span className="grad">Forge</span>
       </h1>
       <p className="empty-sub">
-        A local coding agent that repairs and debugs your files, then tests them against app
-        stores — with no API key and no model calls.
+        One agent for your workspace, GitHub, Hugging Face and app-store checks. Every tool is
+        in one menu — or just describe what you need.
       </p>
-      <div className="suggestions">
-        {SUGGESTIONS.map((s) => (
-          <button key={s.title} className="suggestion" onClick={() => onPick(s.prompt)}>
-            <span className="suggestion-icon">{s.icon}</span>
-            <span className="suggestion-title">{s.title}</span>
-            <span className="suggestion-prompt">{s.prompt}</span>
-          </button>
-        ))}
+      <div className="empty-tools">
+        <ToolsMenu
+          inline
+          onSend={onSend}
+          onOpenPanel={onOpenPanel}
+          onOpenStoreTests={onOpenStoreTests}
+        />
       </div>
       <div className="empty-chips">
         <span className="chip">Auto-fix</span>
@@ -181,6 +132,7 @@ export default function ChatView({
   onTogglePanel,
   onToggleSidebar,
   onOpenStoreTests,
+  onOpenPanel,
   scan,
   scanning,
   autoFix,
@@ -208,7 +160,7 @@ export default function ChatView({
             <span className="chat-title-text">{session?.title || 'New session'}</span>
             <span className="chat-sub">
               <span className={`live-dot ${streaming ? 'busy' : ''}`} />
-              {streaming ? 'Working…' : activeModel ? activeModel.label : 'Local engine'}
+              {streaming ? 'Working…' : activeModel ? activeModel.label : 'Gemma 4 26B'}
             </span>
           </div>
           <button
@@ -221,28 +173,17 @@ export default function ChatView({
         </div>
 
         <div className="toolbar">
-          <button
-            className="act-btn"
-            onClick={() => onSend('Fix the code in my workspace and debug it.')}
+          <ToolsMenu
+            onSend={onSend}
+            onOpenPanel={onOpenPanel}
+            onOpenStoreTests={onOpenStoreTests}
             disabled={streaming}
-            title="Run the local auto-fixer"
-          >
-            <IconTerminal width={13} height={13} />
-            Fix code
-          </button>
-          <button
-            className="act-btn ghost"
-            onClick={onOpenStoreTests}
-            title="Test the workspace against app stores"
-          >
-            <IconFile width={13} height={13} />
-            Store tests
-          </button>
+          />
           <select
             className="model-select"
             value={model}
             onChange={(e) => onModelChange(e.target.value)}
-            title="Engine"
+            title="Model — locked"
           >
             {models.map((m) => (
               <option key={m.id} value={m.id}>
@@ -256,7 +197,11 @@ export default function ChatView({
       <div className="chat-scroll" ref={scrollRef}>
         <div className="chat-inner">
           {timeline.length === 0 && !streaming ? (
-            <EmptyState onPick={onSend} />
+            <EmptyState
+              onSend={onSend}
+              onOpenPanel={onOpenPanel}
+              onOpenStoreTests={onOpenStoreTests}
+            />
           ) : (
             timeline.map((item) => (
               <Turn

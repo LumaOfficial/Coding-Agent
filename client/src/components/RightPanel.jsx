@@ -171,10 +171,18 @@ export default function RightPanel({
 
           <IntegrationCard
             icon={<IconSpark width={15} height={15} />}
-            title="Engine"
-            connected
-            statusText="Local auto-fix · no API key"
-            description="Repairs and debugs your workspace on this machine: syntax errors, invalid JSON, missing imports and formatting. No model calls, no key."
+            title="Gemma 4"
+            connected={integrations?.engine?.connected}
+            statusText={
+              integrations?.engine?.connected
+                ? 'Cloudflare Workers AI · locked'
+                : `Missing ${(integrations?.engine?.missing || ['CLOUDFLARE_API_KEY']).join(', ')}`
+            }
+            description="The only model this app runs: @cf/google/gemma-4-26b-a4b-instruct on Cloudflare Workers AI. It drives the local tools — workspace edits, GitHub, Hugging Face, VS Code and store checks."
+            steps={[
+              'Create a Cloudflare API token with Workers AI access',
+              'Add CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID in the secrets panel',
+            ]}
           />
 
           <IntegrationCard

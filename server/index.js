@@ -14,7 +14,8 @@ import {
   readWorkspaceFile,
   workspaceDir,
 } from './store.js';
-import { runAgent, LOCAL_MODEL } from './agent.js';
+import { runAgent } from './agent.js';
+import { MODEL, configStatus } from './cloudflare.js';
 import { fixWorkspace, scanWorkspace } from './autofix.js';
 import { detectPlatform } from './platform.js';
 import { listStoreTargets, runStoreTests } from './stores.js';
@@ -27,7 +28,7 @@ app.use(express.json({ limit: '8mb' }));
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.get('/api/models', (req, res) => {
-  res.json({ models: [LOCAL_MODEL], default: LOCAL_MODEL.id, mode: 'local' });
+  res.json({ models: [MODEL], default: MODEL.id, mode: 'cloudflare' });
 });
 
 app.get('/api/platform', (req, res) => {
@@ -114,8 +115,15 @@ app.get('/api/integrations', async (req, res) => {
     return res.json(integrationCache.data);
   }
   const [github, huggingface] = await Promise.all([probeGitHub(), probeHuggingFace()]);
+  const cloudflare = configStatus();
   const data = {
-    engine: { mode: 'local', connected: true },
+    engine: {
+      mode: 'cloudflare',
+      model: MODEL.id,
+      label: MODEL.label,
+      connected: cloudflare.configured,
+      missing: cloudflare.missing,
+    },
     github,
     huggingface,
   };
@@ -130,7 +138,7 @@ app.get('/api/sessions', async (req, res) => {
 app.post('/api/sessions', async (req, res) => {
   const session = await createSession({
     title: req.body?.title || 'New session',
-    model: LOCAL_MODEL.id,
+    model: MODEL.id,
   });
   res.status(201).json({ session });
 });
@@ -199,7 +207,7 @@ app.post('/api/sessions/:id/chat', async (req, res) => {
   if (!session) return res.status(404).json({ error: 'Session not found' });
 
   const message = String(req.body?.message || '').trim();
-  const model = LOCAL_MODEL.id;
+  const model = MODEL.id;
   if (!message) return res.status(400).json({ error: 'Message is required' });
 
   res.writeHead(200, {
@@ -271,5 +279,5 @@ app.post('/api/sessions/:id/autofix', async (req, res) => {
 await init();
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Forge API listening on http://0.0.0.0:${PORT}`);
-  console.log('Engine: local auto-fix (Groq disabled)');
+  console.log(`Engine: Cloudflare Workers AI · ${MODEL.remote} (locked)`);
 });
