@@ -1,5 +1,16 @@
 import { randomUUID } from 'node:crypto';
-import { WebSocketServer } from 'ws';
+
+/**
+ * `ws` powers the extension bridge. It is optional on purpose: a dependency
+ * install that has not finished yet must not take the whole agent down, so a
+ * missing module only disables the bridge.
+ */
+let WebSocketServer = null;
+try {
+  ({ WebSocketServer } = await import('ws'));
+} catch {
+  WebSocketServer = null;
+}
 
 /**
  * Orbit's browser bridge. A small extension connects here and runs the
@@ -66,6 +77,7 @@ function liveSocket() {
 
 /** Keep the bridge alive; drop sockets the extension abandoned. */
 export function attachBrowserSocket(server) {
+  if (!WebSocketServer) return null;
   const wss = new WebSocketServer({ server, path: '/browser/ws' });
 
   wss.on('connection', (socket) => {
