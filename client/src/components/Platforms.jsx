@@ -4,9 +4,16 @@ import { IconCheck, IconAlert } from './Icons.jsx';
 
 const MODE_LABEL = {
   connected: 'Connected',
-  public: 'Public read',
+  public: 'Public API',
+  browser: 'Own browser',
   local: 'Local',
-  token: 'Add token',
+};
+
+const MODE_TITLE = {
+  connected: 'Token present — private and write actions unlocked',
+  public: 'Public API answers anonymous reads — no token needed',
+  browser: "Orbit reads it in its own browser — no token needed",
+  local: 'Available locally',
 };
 
 function groupByCategory(platforms) {
@@ -24,9 +31,10 @@ export default function Platforms() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (refresh = false) => {
+    setLoading(true);
     try {
-      const data = await api.platforms();
+      const data = await api.platforms(refresh);
       setPlatforms(data.platforms);
       setError('');
     } catch (err) {
@@ -52,7 +60,7 @@ export default function Platforms() {
 
   const groups = useMemo(() => groupByCategory(visible), [visible]);
   const connected = platforms.filter((platform) => platform.connected).length;
-  const readable = platforms.filter((platform) => platform.readable).length;
+  const reachable = platforms.filter((platform) => platform.reachable !== false).length;
 
   return (
     <div className="platforms">
@@ -65,13 +73,14 @@ export default function Platforms() {
           placeholder="Search platforms"
           aria-label="Search platforms"
         />
-        <button className="btn-small ghost" onClick={load} disabled={loading}>
+        <button className="btn-small ghost" onClick={() => load(true)} disabled={loading}>
           {loading ? '…' : 'Refresh'}
         </button>
       </div>
 
       <div className="platforms-meta">
-        <strong>{platforms.length}</strong> platforms · {connected} connected · {readable} readable
+        <strong>{platforms.length}</strong> platforms · {reachable} reachable · {connected} with a
+        token · <span className="platforms-note">no tokens needed</span>
       </div>
 
       {error && <div className="muted-note">{error}</div>}
@@ -94,23 +103,21 @@ export default function Platforms() {
               </div>
               <div className="platform-side">
                 <span
-                  className={`platform-pill ${platform.mode}`}
+                  className={`platform-pill ${platform.mode}${
+                    platform.reachable === false ? ' unreachable' : ''
+                  }`}
                   title={
-                    platform.mode === 'token'
-                      ? `Add ${platform.env.join(', ')} to the app secrets`
-                      : platform.mode === 'connected'
-                        ? 'Credentials are present'
-                        : platform.mode === 'public'
-                          ? 'Works without a token'
-                          : 'Available locally'
+                    platform.reachable === false
+                      ? `Not answering right now${platform.checked ? ` (${platform.checked})` : ''}`
+                      : MODE_TITLE[platform.mode] || 'Available without a token'
                   }
                 >
-                  {platform.mode === 'connected' ? (
-                    <IconCheck width={11} height={11} />
-                  ) : (
+                  {platform.reachable === false ? (
                     <IconAlert width={11} height={11} />
+                  ) : (
+                    <IconCheck width={11} height={11} />
                   )}
-                  {MODE_LABEL[platform.mode]}
+                  {MODE_LABEL[platform.mode] || platform.mode}
                 </span>
                 <a className="platform-docs" href={platform.docs} target="_blank" rel="noreferrer">
                   Docs

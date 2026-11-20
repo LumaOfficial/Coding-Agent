@@ -24,6 +24,7 @@ Rules:
 - You also have your own isolated Linux computer (E2B desktop) with Chromium. Use it to check or test something yourself instead of guessing: desktop_navigate to open a URL, desktop_screenshot to look at the screen, desktop_click (pixel coordinates from the screenshot) and desktop_type/desktop_key to interact, desktop_terminal to run shell commands inside the VM, desktop_close when you are done. Screenshots come back to you as images — read them before the next click.
 - The desktop shuts itself down after 3 minutes of inactivity, so batch your steps and call desktop_close when finished.
 - GitHub and Hugging Face tools are read-only without a token.
+- Every catalog platform is usable without a token: list_platforms shows whether it is reached through its public API (platform_request) or the agent's own browser (web_fetch / desktop_navigate). Never ask the user for an API token; fall back to the browser path instead.
 - Answer in short markdown: what you did, then the result. No preamble, no filler.`;
 
 function parseArgs(raw) {

@@ -450,6 +450,70 @@ export const PLATFORMS = [
   },
 ];
 
+/**
+ * Token-free access. Every platform in the catalog is reachable without an API
+ * token: either its public REST API answers anonymous GETs (`api` + `probe`),
+ * or the agent reads it in its own browser (`site`). A token only unlocks
+ * private or write actions — it is never required to connect.
+ */
+const TOKEN_FREE = {
+  github: { api: 'https://api.github.com', probe: '/rate_limit' },
+  gitlab: { api: 'https://gitlab.com/api/v4', probe: '/projects?per_page=1' },
+  bitbucket: { api: 'https://api.bitbucket.org/2.0', probe: '/repositories/atlassian?pagelen=1' },
+  codeberg: { api: 'https://codeberg.org/api/v1', probe: '/repos/search?limit=1' },
+  cloudflare: { api: 'https://api.cloudflare.com/client/v4', probe: '/ips' },
+  npm: { api: 'https://registry.npmjs.org', probe: '/react' },
+  pypi: { api: 'https://pypi.org/pypi', probe: '/requests/json' },
+  dockerhub: { api: 'https://hub.docker.com/v2', probe: '/repositories/library/nginx/' },
+  crates: { api: 'https://crates.io/api/v1', probe: '/crates/serde' },
+  rubygems: { api: 'https://rubygems.org/api/v1', probe: '/gems/rails.json' },
+  huggingface: { api: 'https://huggingface.co/api', probe: '/models?limit=1' },
+  slack: { api: 'https://slack.com/api', probe: '/api.test' },
+  sentry: { api: 'https://sentry.io/api/0', probe: '/' },
+  discord: { api: 'https://discord.com/api/v10', probe: '/gateway' },
+  kaggle: { api: 'https://www.kaggle.com/api/v1', probe: '/datasets/list?page=1' },
+
+  gitea: { site: 'https://gitea.com' },
+  vercel: { site: 'https://vercel.com' },
+  netlify: { site: 'https://app.netlify.com' },
+  railway: { site: 'https://railway.com' },
+  render: { site: 'https://render.com' },
+  flyio: { site: 'https://fly.io' },
+  heroku: { site: 'https://dashboard.heroku.com' },
+  digitalocean: { site: 'https://cloud.digitalocean.com' },
+  aws: { site: 'https://aws.amazon.com' },
+  gcp: { site: 'https://cloud.google.com' },
+  azure: { site: 'https://portal.azure.com' },
+  supabase: { site: 'https://supabase.com' },
+  firebase: { site: 'https://console.firebase.google.com' },
+  neon: { site: 'https://console.neon.tech' },
+  planetscale: { site: 'https://app.planetscale.com' },
+  turso: { site: 'https://turso.tech' },
+  mongodb: { site: 'https://cloud.mongodb.com' },
+  upstash: { site: 'https://console.upstash.com' },
+  openai: { site: 'https://openai.com' },
+  anthropic: { site: 'https://console.anthropic.com' },
+  replicate: { site: 'https://replicate.com' },
+  figma: { site: 'https://www.figma.com' },
+  notion: { site: 'https://www.notion.so' },
+  linear: { site: 'https://linear.app' },
+  jira: { site: 'https://www.atlassian.com/software/jira' },
+  trello: { site: 'https://trello.com' },
+  asana: { site: 'https://app.asana.com' },
+  datadog: { site: 'https://app.datadoghq.com' },
+};
+
+for (const platform of PLATFORMS) {
+  const access = TOKEN_FREE[platform.id];
+  if (!access) continue;
+  if (access.api) platform.api = access.api;
+  if (access.probe) {
+    platform.probe = access.probe;
+    platform.publicRead = true;
+  }
+  if (access.site) platform.site = access.site;
+}
+
 export function findPlatform(id) {
   return PLATFORMS.find((platform) => platform.id === id) || null;
 }
@@ -465,17 +529,58 @@ export function listPlatforms() {
         ? 'local'
         : platform.publicRead
           ? 'public'
-          : 'token';
+          : 'browser';
     return {
       id: platform.id,
       name: platform.name,
       category: platform.category,
       blurb: platform.blurb,
       docs: platform.docs,
+      site: platform.site || null,
+      api: platform.api || null,
+      probe: platform.probe || null,
       env: platform.env,
       mode,
       connected: configured,
+      tokenFree: true,
+      tokenOptional: platform.env.length > 0,
       readable: Boolean(platform.api) && (configured || Boolean(platform.publicRead)),
     };
   });
+}
+
+const PROBE_TIMEOUT_MS = 6000;
+const PROBE_CACHE_MS = 5 * 60_000;
+const PROBE_UA = 'Orbit/1.0 (+https://base44.app)';
+
+let probeCache = { at: 0, data: null };
+
+/** One anonymous GET: a public API probe when the platform has one, else its site. */
+async function probeOne(platform) {
+  const target =
+    platform.api && platform.probe ? `${platform.api}${platform.probe}` : platform.site;
+  if (!target) {
+    return { reachable: platform.mode === 'local', status: null, checked: null };
+  }
+  try {
+    const res = await fetch(target, {
+      headers: { 'User-Agent': PROBE_UA, Accept: 'application/json, text/html;q=0.9' },
+      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+    });
+    return { reachable: true, status: res.status, checked: target };
+  } catch (error) {
+    return { reachable: false, status: null, error: error.message, checked: target };
+  }
+}
+
+/** Catalog with a live, token-free reachability check (cached for a few minutes). */
+export async function platformStatuses({ refresh = false } = {}) {
+  if (!refresh && probeCache.data && Date.now() - probeCache.at < PROBE_CACHE_MS) {
+    return probeCache.data;
+  }
+  const base = listPlatforms();
+  const probes = await Promise.all(base.map(probeOne));
+  const data = base.map((platform, index) => ({ ...platform, ...probes[index] }));
+  probeCache = { at: Date.now(), data };
+  return data;
 }

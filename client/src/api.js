@@ -19,7 +19,7 @@ export const api = {
   models: () => request('/api/models'),
   integrations: () => request('/api/integrations'),
   platform: () => request('/api/platform'),
-  platforms: () => request('/api/platforms'),
+  platforms: (refresh = false) => request(`/api/platforms${refresh ? '?refresh=1' : ''}`),
   sessions: () => request('/api/sessions'),
   createSession: (body = {}) => request('/api/sessions', { method: 'POST', body }),
   session: (id) => request(`/api/sessions/${id}`),

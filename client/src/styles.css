@@ -1905,6 +1905,10 @@ button {
   font-weight: 650;
 }
 
+.platforms-note {
+  color: var(--green);
+}
+
 .platform-group {
   margin-bottom: 14px;
 }
@@ -1999,7 +2003,13 @@ button {
   background: var(--accent-soft);
 }
 
-.platform-pill.token {
+.platform-pill.browser {
+  color: var(--accent-ink);
+  border-color: rgba(139, 108, 255, 0.24);
+  background: var(--accent-soft);
+}
+
+.platform-pill.unreachable {
   color: var(--orange);
   border-color: rgba(255, 178, 102, 0.2);
   background: rgba(255, 178, 102, 0.06);

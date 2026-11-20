@@ -19,7 +19,7 @@ import { runAgent } from './agent.js';
 import { MODEL, configStatus } from './cloudflare.js';
 import { fixWorkspace, scanWorkspace } from './autofix.js';
 import { detectPlatform } from './platform.js';
-import { listPlatforms } from './platforms.js';
+import { platformStatuses } from './platforms.js';
 import { listStoreTargets, runStoreTests } from './stores.js';
 import {
   closeAllDesktops,
@@ -58,8 +58,9 @@ app.get('/api/desktop/status', (req, res) => {
 
 app.use('/api/desktop/screenshots', express.static(screenshotDir, { maxAge: '1h' }));
 
-app.get('/api/platforms', (req, res) => {
-  res.json({ platforms: listPlatforms() });
+app.get('/api/platforms', async (req, res) => {
+  const platforms = await platformStatuses({ refresh: req.query.refresh === '1' });
+  res.json({ platforms });
 });
 
 app.get('/api/stores', (req, res) => {

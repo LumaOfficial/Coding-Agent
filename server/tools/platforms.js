@@ -16,18 +16,11 @@ async function readPlatform(id, requestPath) {
   if (!platform.api) {
     return {
       ok: false,
-      content: `${platform.name} has no public REST base here — connect it with ${platform.env.join(', ') || 'local access'} and use its own tooling.`,
+      content: `${platform.name} has no public REST base here — open ${platform.site || platform.docs} with web_fetch or desktop_navigate. No token needed.`,
     };
   }
 
   const configured = platform.env.every((name) => Boolean(process.env[name]));
-  if (!configured && !platform.publicRead) {
-    return {
-      ok: false,
-      content: `${platform.name} needs ${platform.env.join(' and ')} in the app secrets before it can be read.`,
-    };
-  }
-
   const suffix = requestPath.startsWith('/') ? requestPath : `/${requestPath}`;
   const url = `${platform.api}${suffix}`;
   if (new URL(url).origin !== new URL(platform.api).origin) {
@@ -48,6 +41,15 @@ async function readPlatform(id, requestPath) {
   }
 
   const text = await response.text();
+  if (!response.ok && !configured && response.status >= 400 && response.status < 500) {
+    return {
+      ok: false,
+      content:
+        `${platform.name} GET ${suffix} → ${response.status}. That path is private. ` +
+        `No token needed: read the public pages with web_fetch (${platform.site || platform.docs}) ` +
+        `or open ${platform.site || platform.docs} with desktop_navigate.`,
+    };
+  }
   return {
     ok: response.ok,
     content: `${platform.name} GET ${suffix} → ${response.status}\n\n${text.slice(0, MAX_BODY)}`,
@@ -60,7 +62,7 @@ export const definitions = [
     function: {
       name: 'list_platforms',
       description:
-        'List every platform in the catalog (GitHub, GitLab, Vercel, Supabase, Hugging Face, Figma, Slack, Sentry…) with its category, the env var that connects it, and whether it is connected, public-read or needs a token. Call it when asked what the agent can connect to.',
+        'List every platform in the catalog (GitHub, GitLab, Vercel, Supabase, Hugging Face, Figma, Slack, Sentry…) with its category and how it is reached. None of them needs a token: public APIs answer anonymous reads, and the rest are read in the agent\'s own browser. Call it when asked what the agent can connect to.',
       parameters: {
         type: 'object',
         properties: {
@@ -77,7 +79,7 @@ export const definitions = [
     function: {
       name: 'platform_request',
       description:
-        'Read a path from a catalog platform\'s public REST API (GET only), for example {"platform":"npm","path":"/react"} or {"platform":"vercel","path":"/v9/projects"}. Credentials are taken from the app secrets; the caller never supplies a key.',
+        'Read a path from a catalog platform\'s public REST API (GET only) without a token, for example {"platform":"npm","path":"/react"} or {"platform":"gitlab","path":"/projects"}. If the path needs sign-in, the result tells you to use web_fetch or desktop_navigate instead.',
       parameters: {
         type: 'object',
         properties: {
@@ -98,13 +100,19 @@ export const handlers = {
       ? platforms.filter((platform) => platform.category.toLowerCase().includes(category))
       : platforms;
 
-    const lines = filtered.map(
-      (platform) =>
-        `- ${platform.name} (${platform.id}) · ${platform.category} · ${platform.mode}` +
-        `${platform.env.length ? ` · env ${platform.env.join(', ')}` : ''}` +
-        `${platform.readable ? ' · readable' : ''}`
-    );
-    return `${filtered.length} platforms\n${lines.join('\n')}`;
+    const lines = filtered.map((platform) => {
+      const access =
+        platform.mode === 'public'
+          ? 'public API'
+          : platform.mode === 'browser'
+            ? `own browser${platform.site ? ` (${platform.site})` : ''}`
+            : platform.mode;
+      return (
+        `- ${platform.name} (${platform.id}) · ${platform.category} · ${access} · no token needed` +
+        `${platform.tokenOptional ? ` · optional ${platform.env.join(', ')} for private actions` : ''}`
+      );
+    });
+    return `${filtered.length} platforms, all usable without a token\n${lines.join('\n')}`;
   },
 
   async platform_request(args) {
