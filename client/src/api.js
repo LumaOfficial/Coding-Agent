@@ -21,6 +21,7 @@ export const api = {
   signup: (body) => request('/api/auth/signup', { method: 'POST', body }),
   login: (body) => request('/api/auth/login', { method: 'POST', body }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
+  markOnboarded: () => request('/api/auth/onboarded', { method: 'POST' }),
   models: () => request('/api/models'),
   integrations: () => request('/api/integrations'),
   platform: () => request('/api/platform'),

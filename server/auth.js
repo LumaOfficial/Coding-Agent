@@ -16,13 +16,13 @@ const scrypt = promisify(crypto.scrypt);
 
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), '.data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const TOKENS_FILE = path.join(DATA_DIR, 'auth-tokens.json');
+const SECRET_FILE = path.join(DATA_DIR, 'session-secret');
 
 export const SESSION_COOKIE = 'orbit_session';
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 let users = [];
-let tokens = {};
+let secret = '';
 
 const httpError = (status, message) => {
   const error = new Error(message);
@@ -39,32 +39,36 @@ async function readJson(file, fallback) {
 }
 
 async function persist() {
-  await Promise.all([
-    writeFile(USERS_FILE, JSON.stringify(users, null, 2)),
-    writeFile(TOKENS_FILE, JSON.stringify(tokens, null, 2)),
-  ]);
+  await writeFile(USERS_FILE, JSON.stringify(users, null, 2));
+}
+
+/** Session tokens are signed, not stored: a restart can never sign anyone out. */
+function sign(payload) {
+  return crypto.createHmac('sha256', secret).update(payload).digest('base64url');
 }
 
 const hashPassword = async (password, salt) =>
   (await scrypt(password, salt, 64)).toString('hex');
 
 const publicUser = (user) =>
-  user ? { id: user.id, email: user.email, name: user.name, created_at: user.created_at } : null;
+  user
+    ? {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        created_at: user.created_at,
+        onboarded_at: user.onboarded_at || null,
+      }
+    : null;
 
 export async function initAuth() {
   await mkdir(DATA_DIR, { recursive: true });
   users = await readJson(USERS_FILE, []);
-  tokens = await readJson(TOKENS_FILE, {});
-
-  const now = Date.now();
-  let changed = false;
-  for (const [token, entry] of Object.entries(tokens)) {
-    if (!entry || entry.expires_at < now || !users.some((u) => u.id === entry.user_id)) {
-      delete tokens[token];
-      changed = true;
-    }
+  secret = await readFile(SECRET_FILE, 'utf8').catch(() => '');
+  if (!secret) {
+    secret = crypto.randomBytes(32).toString('hex');
+    await writeFile(SECRET_FILE, secret, { mode: 0o600 });
   }
-  if (changed) await persist();
 }
 
 export async function signUp({ email, password, name }) {
@@ -87,6 +91,7 @@ export async function signUp({ email, password, name }) {
     salt,
     password_hash: await hashPassword(password, salt),
     created_at: new Date().toISOString(),
+    onboarded_at: null,
   };
   users.push(user);
   await persist();
@@ -108,23 +113,35 @@ export async function signIn({ email, password }) {
 }
 
 export async function issueToken(userId) {
-  const token = crypto.randomBytes(32).toString('hex');
-  const now = Date.now();
-  tokens[token] = { user_id: userId, created_at: now, expires_at: now + SESSION_TTL_MS };
-  await persist();
-  return token;
+  const payload = `${userId}.${Date.now() + SESSION_TTL_MS}`;
+  return `${payload}.${sign(payload)}`;
 }
 
-export async function revokeToken(token) {
-  if (!token || !tokens[token]) return;
-  delete tokens[token];
-  await persist();
-}
+/** Signed tokens cannot be revoked server-side; signing out clears the cookie. */
+export async function revokeToken() {}
 
 export function userForToken(token) {
-  const entry = token ? tokens[token] : null;
-  if (!entry || entry.expires_at < Date.now()) return null;
-  return publicUser(users.find((user) => user.id === entry.user_id));
+  if (!token) return null;
+  const parts = String(token).split('.');
+  if (parts.length !== 3) return null;
+  const [userId, expires, signature] = parts;
+  const expected = sign(`${userId}.${expires}`);
+  const a = Buffer.from(signature);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (Number(expires) < Date.now()) return null;
+  return publicUser(users.find((user) => user.id === userId));
+}
+
+/** Marks the account as having seen the welcome tour. */
+export async function completeOnboarding(userId) {
+  const user = users.find((entry) => entry.id === userId);
+  if (!user) return null;
+  if (!user.onboarded_at) {
+    user.onboarded_at = new Date().toISOString();
+    await persist();
+  }
+  return publicUser(user);
 }
 
 export function readSessionToken(req) {

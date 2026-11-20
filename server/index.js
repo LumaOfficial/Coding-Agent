@@ -19,6 +19,7 @@ import {
 import {
   apiAuth,
   clearSessionCookie,
+  completeOnboarding,
   initAuth,
   issueToken,
   readSessionToken,
@@ -87,6 +88,11 @@ app.post('/api/auth/logout', async (req, res) => {
   await revokeToken(readSessionToken(req));
   clearSessionCookie(res);
   res.json({ ok: true });
+});
+
+app.post('/api/auth/onboarded', async (req, res) => {
+  const user = await completeOnboarding(req.user.id);
+  res.json({ user });
 });
 
 app.get('/api/models', (req, res) => {

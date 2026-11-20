@@ -1,0 +1,168 @@
+/* ==========================================================================
+   Orbit — first-run welcome tour
+   ========================================================================== */
+
+.onb-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(3, 4, 8, 0.78);
+  backdrop-filter: blur(8px);
+  animation: fade-in 0.2s ease both;
+}
+
+.onb-card {
+  width: min(440px, 100%);
+  padding: 22px 22px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  background:
+    radial-gradient(420px 220px at 88% -20%, rgba(124, 92, 255, 0.22), transparent 70%),
+    #0a0d13;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.75);
+  animation: modal-in 0.24s cubic-bezier(0.22, 0.68, 0, 1) both;
+}
+
+.onb-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.onb-mark {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #fff;
+  background: var(--grad);
+  box-shadow: 0 10px 24px -14px rgba(124, 92, 255, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.onb-eyebrow {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.onb-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 660;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.onb-sub {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.onb-skills {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.onb-skill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.onb-skill-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.onb-skill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.onb-skill-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.onb-skill-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.onb-tips {
+  margin: 0 0 16px;
+  padding: 0 0 0 16px;
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.onb-tips li::marker {
+  color: var(--accent);
+}
+
+.onb-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.onb-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.onb-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: width 0.2s, background 0.2s;
+}
+
+.onb-dots span.active {
+  width: 16px;
+  background: var(--accent);
+}
+
+.onb-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 420px) {
+  .onb-card {
+    padding: 18px 16px 14px;
+  }
+}

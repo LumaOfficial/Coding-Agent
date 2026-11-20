@@ -54,7 +54,7 @@ function Group({ title, children }) {
   );
 }
 
-export default function SettingsPanel({ open, settings, onChange, onReset, onClose, user }) {
+export default function SettingsPanel({ open, settings, onChange, onReset, onClose, onShowTour, user }) {
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event) => {
@@ -240,6 +240,15 @@ export default function SettingsPanel({ open, settings, onChange, onReset, onClo
           </Group>
 
           <Group title="About">
+            <div className="set-row static">
+              <span className="set-text">
+                <span className="set-label">Welcome tour</span>
+                <span className="set-hint">Replay the intro to Orbit and what it can do.</span>
+              </span>
+              <button type="button" className="btn-small ghost" onClick={onShowTour}>
+                Show
+              </button>
+            </div>
             <div className="set-row static">
               <span className="set-text">
                 <span className="set-label">Orbit 1.2</span>

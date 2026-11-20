@@ -6,6 +6,7 @@ import RightPanel from './components/RightPanel.jsx';
 import Ambient from './components/Ambient.jsx';
 import AuthScreen, { AuthBoot } from './components/AuthScreen.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
+import Onboarding from './components/Onboarding.jsx';
 import useIdle from './lib/useIdle.js';
 import useBrowserLayout from './lib/useBrowserLayout.js';
 import { accentVars, useSettings } from './lib/settings.js';
@@ -14,6 +15,7 @@ export default function App() {
   const full = useBrowserLayout();
   const { settings, update: updateSettings, reset: resetSettings } = useSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [user, setUser] = useState(null);
   const [booting, setBooting] = useState(true);
   const [sessions, setSessions] = useState([]);
@@ -320,6 +322,18 @@ export default function App() {
     }
   }
 
+  async function finishOnboarding() {
+    try {
+      const data = await api.markOnboarded();
+      if (data.user) setUser(data.user);
+    } catch {
+      setUser((current) =>
+        current ? { ...current, onboarded_at: new Date().toISOString() } : current
+      );
+    }
+    setShowTour(false);
+  }
+
   async function signOut() {
     abortRef.current?.abort();
     try {
@@ -429,8 +443,14 @@ export default function App() {
         onChange={updateSettings}
         onReset={resetSettings}
         onClose={() => setSettingsOpen(false)}
+        onShowTour={() => {
+          setSettingsOpen(false);
+          setShowTour(true);
+        }}
         user={user}
       />
+
+      {(showTour || !user.onboarded_at) && <Onboarding onDone={finishOnboarding} />}
     </div>
   );
 }
