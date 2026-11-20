@@ -110,7 +110,7 @@ export default function App() {
         setModel(m.default);
         setIntegrations(integ);
         setSessions(s.sessions);
-        if (s.sessions.length) await openSession(s.sessions[0].id);
+        // Always start on a fresh chat; past sessions stay in the sidebar.
       } catch (err) {
         setError(err.message);
       }
