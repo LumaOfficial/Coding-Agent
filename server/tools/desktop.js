@@ -28,6 +28,17 @@ async function shot(sessionId, sandbox) {
   return { image: dataUrl(image), saved };
 }
 
+async function settleTitle(sandbox, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  let title = '';
+  while (Date.now() < deadline) {
+    title = await windowTitle(sandbox);
+    if (title && title !== 'Xfwm4' && !/^New Tab/.test(title)) return title;
+    await sandbox.wait(700);
+  }
+  return title;
+}
+
 async function windowTitle(sandbox) {
   try {
     const id = await sandbox.getCurrentWindowId();
@@ -37,11 +48,16 @@ async function windowTitle(sandbox) {
   }
 }
 
-async function ensureChrome(sandbox, state) {
-  if (state.chrome) return;
-  await sandbox.launch(LAUNCH);
-  await sandbox.wait(2000);
-  state.chrome = true;
+/**
+ * Open a URL by starting Chromium from the shell on the desktop display.
+ * Keystroke navigation (ctrl+l) depends on window focus and misses right
+ * after launch, while passing the URL to Chromium always loads it.
+ */
+async function openUrl(sandbox, url) {
+  const quoted = `'${String(url).replace(/'/g, `'\\''`)}'`;
+  await sandbox.commands.run(`DISPLAY=:0 ${LAUNCH} --no-first-run ${quoted} >/dev/null 2>&1 &`, {
+    background: true,
+  });
 }
 
 function screenshotLine(saved) {
@@ -206,13 +222,10 @@ export const handlers = {
     const waitMs = clampInt(args?.wait_ms, 500, 15000, 3000);
 
     return withDesktop(ctx.sessionId, async (sandbox, state) => {
-      await ensureChrome(sandbox, state);
-      await sandbox.press(['ctrl', 'l']);
-      await sandbox.wait(300);
-      await sandbox.write(url.href);
-      await sandbox.press('enter');
+      await openUrl(sandbox, url.href);
+      state.chrome = true;
       await sandbox.wait(waitMs);
-      const title = await windowTitle(sandbox);
+      const title = await settleTitle(sandbox);
       const { image, saved } = await shot(ctx.sessionId, sandbox);
       return {
         text: `Chromium is on ${url.href}${title ? `\nWindow: ${title}` : ''}\n${screenshotLine(saved)}`,

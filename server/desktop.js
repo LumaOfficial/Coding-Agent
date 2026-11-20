@@ -52,7 +52,10 @@ async function createEntry(sessionId) {
     throw new Error('Forge has no computer yet — add E2B_API_KEY in the app secrets.');
   }
   const { Sandbox } = await loadSdk();
-  const sandbox = await Sandbox.create({ timeoutMs: IDLE_MS });
+  const sandbox = await Sandbox.create({
+    timeoutMs: IDLE_MS,
+    metadata: { app: 'forge', session: sessionId },
+  });
   return {
     sandbox,
     timer: null,
@@ -107,6 +110,38 @@ export async function closeDesktop(sessionId) {
 
 export async function closeAllDesktops() {
   await Promise.all([...desktops.keys()].map((id) => closeDesktop(id)));
+}
+
+/**
+ * A restarted API owns no sandbox any more, so any Forge sandbox still running
+ * is an orphan burning credits. Kill them at boot.
+ */
+export async function reapOrphanDesktops() {
+  if (!desktopConfigured()) return 0;
+  try {
+    const { Sandbox } = await loadSdk();
+    const paginator = Sandbox.list();
+    const items = [];
+    for (let page = 0; page < 10; page += 1) {
+      const batch = await paginator.nextItems();
+      if (!batch?.length) break;
+      items.push(...batch);
+    }
+    let killed = 0;
+    for (const item of items) {
+      if (item.metadata?.app !== 'forge') continue;
+      try {
+        const sandbox = await Sandbox.connect(item.sandboxId);
+        await sandbox.kill();
+        killed += 1;
+      } catch {
+        /* already gone */
+      }
+    }
+    return killed;
+  } catch {
+    return 0;
+  }
 }
 
 /** Store a PNG and return the URL the chat and the model can use. */

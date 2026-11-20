@@ -143,7 +143,6 @@ export async function runAgent({ sessionId, emit }) {
         name,
         ok: result.ok,
         result: result.content.slice(0, 4000),
-        ...(result.image ? { image: result.image } : {}),
       });
 
       history.push({ role: 'tool', tool_call_id: id, name, content: result.content });

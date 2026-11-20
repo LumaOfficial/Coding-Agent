@@ -11,6 +11,14 @@ via Cloudflare Workers AI — it is the only model the app offers.
 - **Its own browser** — `web_search` queries the live web (Bing, then DuckDuckGo instant answers,
   then Wikipedia) and `web_fetch` opens a public page and returns its readable text. No API key,
   no user tab; private/local addresses are refused.
+- **Its own computer** — an isolated E2B Linux desktop with Chromium. Gemma 4 launches Chrome,
+  opens URLs, clicks coordinates, types, runs shell commands and captures screenshots to check
+  its own work (`desktop_launch`, `desktop_navigate`, `desktop_click`, `desktop_type`,
+  `desktop_key`, `desktop_terminal`, `desktop_screenshot`, `desktop_close`). Each screenshot is
+  fed back to the model as an image and shown inline in the chat. Every sandbox is created with a
+  3 minute lifetime, extended only by real tool use, killed on idle, on `desktop_close`, when the
+  chat session is deleted or a new chat starts, and any leftover sandbox is reaped when the API
+  restarts — so idle credits are never spent.
 - **Full browser window** — on a wide viewport the app fills the screen and docks the session
   sidebar and workspace panel as real columns; in a narrow extension panel it falls back to the
   single-column drawer layout. Idle for a while and Forge drifts off — little Z's, then a snoring
@@ -52,6 +60,7 @@ cd client && npm install && npm run dev   # UI on :5173, proxies /api
 | `CLOUDFLARE_ACCOUNT_ID` | yes | Cloudflare account id used in the Workers AI endpoint |
 | `GITHUB_TOKEN` | no | Only for commits and pull requests, `repo` scope |
 | `HF_TOKEN` | no | Only for private Hugging Face repos and higher rate limits |
+| `E2B_API_KEY` | no | Forge's own Linux desktop (Chromium, terminal, screenshots). Without it the desktop tools report that the computer is not connected |
 
 `GROQ_API_KEY` is not read anywhere. Public GitHub reads and Hugging Face search work without
 their tokens.
