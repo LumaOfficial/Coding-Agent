@@ -5,11 +5,15 @@ import ChatView from './components/ChatView.jsx';
 import RightPanel from './components/RightPanel.jsx';
 import Ambient from './components/Ambient.jsx';
 import AuthScreen, { AuthBoot } from './components/AuthScreen.jsx';
+import SettingsPanel from './components/SettingsPanel.jsx';
 import useIdle from './lib/useIdle.js';
 import useBrowserLayout from './lib/useBrowserLayout.js';
+import { accentVars, useSettings } from './lib/settings.js';
 
 export default function App() {
   const full = useBrowserLayout();
+  const { settings, update: updateSettings, reset: resetSettings } = useSettings();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [booting, setBooting] = useState(true);
   const [sessions, setSessions] = useState([]);
@@ -20,7 +24,7 @@ export default function App() {
   const [model, setModel] = useState('cloudflare/gemma-4-26b-a4b-it');
   const [integrations, setIntegrations] = useState(null);
   const [streaming, setStreaming] = useState(false);
-  const idle = useIdle({ enabled: !streaming });
+  const idle = useIdle({ enabled: !streaming && settings.idleSleep });
   const [liveText, setLiveText] = useState('');
   const [liveTools, setLiveTools] = useState([]);
   const [error, setError] = useState('');
@@ -33,27 +37,14 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [scan, setScan] = useState(null);
   const [scanning, setScanning] = useState(false);
-  const [autoFix, setAutoFix] = useState(() => {
-    try {
-      return localStorage.getItem('orbit.autoFix') !== 'off';
-    } catch {
-      return true;
-    }
-  });
-
   const abortRef = useRef(null);
   const activeIdRef = useRef(null);
-  const autoFixRef = useRef(autoFix);
+  const autoFixRef = useRef(settings.autoFix);
   const scanTokenRef = useRef(0);
 
   useEffect(() => {
-    autoFixRef.current = autoFix;
-    try {
-      localStorage.setItem('orbit.autoFix', autoFix ? 'on' : 'off');
-    } catch {
-      /* ignore */
-    }
-  }, [autoFix]);
+    autoFixRef.current = settings.autoFix;
+  }, [settings.autoFix]);
 
   // Always-on scan: runs by itself on every session open and after every turn.
   const runScan = useCallback(async (id) => {
@@ -352,8 +343,13 @@ export default function App() {
   if (!user) return <AuthScreen onAuthed={setUser} />;
 
   return (
-    <div className={`app ${full ? 'full' : ''} ${idle !== 'awake' ? idle : ''}`}>
-      <Ambient level={idle} />
+    <div
+      className={`app ${full ? 'full' : ''} ${idle !== 'awake' ? idle : ''} ${
+        settings.density === 'compact' ? 'compact' : ''
+      } ${settings.motion ? '' : 'no-motion'} ${settings.wrapCode ? 'wrap-code' : ''}`}
+      style={accentVars(settings.accent)}
+    >
+      <Ambient level={idle} effects={settings.ambient} spotlight={settings.spotlight} />
       <Sidebar
         sessions={sessions}
         activeId={session?.id}
@@ -366,6 +362,7 @@ export default function App() {
         idle={idle}
         user={user}
         onSignOut={signOut}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
 
       <main className="main">
@@ -392,8 +389,10 @@ export default function App() {
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
           scan={scan}
           scanning={scanning}
-          autoFix={autoFix}
-          onToggleAutoFix={() => setAutoFix((value) => !value)}
+          autoFix={settings.autoFix}
+          onToggleAutoFix={() => updateSettings({ autoFix: !settings.autoFix })}
+          settings={settings}
+          onOpenSettings={() => setSettingsOpen(true)}
           onApplyFixes={applyFixes}
           onOpenStoreTests={() => {
             setPanelTab('stores');
@@ -419,6 +418,15 @@ export default function App() {
           onClose={() => setPanelOpen(false)}
         />
       )}
+
+      <SettingsPanel
+        open={settingsOpen}
+        settings={settings}
+        onChange={updateSettings}
+        onReset={resetSettings}
+        onClose={() => setSettingsOpen(false)}
+        user={user}
+      />
     </div>
   );
 }

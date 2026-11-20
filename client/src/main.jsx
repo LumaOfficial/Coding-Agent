@@ -5,5 +5,6 @@ import './styles.css';
 import './animations.css';
 import './effects.css';
 import './auth.css';
+import './settings.css';
 
 createRoot(document.getElementById('root')).render(<App />);

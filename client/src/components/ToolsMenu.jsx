@@ -60,7 +60,7 @@ const TOOLS = [
     hint: 'Look it up and read the page',
     icon: IconGlobe,
     prompt:
-      'Search the web for the latest Cloudflare Workers AI limits and pricing, read the docs page, and summarize what matters.',
+      'Search the web for the best free static hosting options, read the docs page, and summarize what matters.',
   },
   {
     id: 'github',

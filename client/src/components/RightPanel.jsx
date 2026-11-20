@@ -169,17 +169,17 @@ export default function RightPanel({
 
           <IntegrationCard
             icon={<IconSpark width={15} height={15} />}
-            title="Gemma 4"
+            title="Orbit 1.2"
             connected={integrations?.engine?.connected}
             statusText={
               integrations?.engine?.connected
-                ? 'Cloudflare Workers AI · locked'
+                ? 'Online · built in'
                 : `Missing ${(integrations?.engine?.missing || ['CLOUDFLARE_API_KEY']).join(', ')}`
             }
-            description="The only model this app runs: @cf/google/gemma-4-26b-a4b-it on Cloudflare Workers AI. It drives the local tools — workspace edits, GitHub, Hugging Face, VS Code and store checks."
+            description="The agent behind every tool — workspace edits, GitHub, Hugging Face, VS Code and store checks. It plans, writes and verifies its own work."
             steps={[
-              'Create a Cloudflare API token with Workers AI access',
-              'Add CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID in the secrets panel',
+              'Add an API token with AI access',
+              'Set CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID in the secrets panel',
             ]}
           />
 
@@ -194,7 +194,7 @@ export default function RightPanel({
                   } running · auto-stops after 3 min idle`
                 : 'Missing E2B_API_KEY'
             }
-            description="An isolated Linux desktop with Chromium that Gemma 4 drives itself: open URLs, click, type, run terminal commands and take screenshots to check its own work. Sandboxes are killed after 3 minutes of inactivity or when a chat closes."
+            description="An isolated Linux desktop with Chromium that Orbit drives itself: open URLs, click, type, run terminal commands and take screenshots to check its own work. Sandboxes are killed after 3 minutes of inactivity or when a chat closes."
             steps={[
               'Create an API key at e2b.dev/dashboard',
               'Add E2B_API_KEY in the secrets panel',

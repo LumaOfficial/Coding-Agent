@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { IconSend, IconStop } from './Icons.jsx';
 
-export default function Composer({ onSend, streaming, onStop, napping = false }) {
+export default function Composer({ onSend, streaming, onStop, napping = false, enterToSend = true }) {
   const [value, setValue] = useState('');
   const ref = useRef(null);
 
@@ -32,14 +32,17 @@ export default function Composer({ onSend, streaming, onStop, napping = false })
         }
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            submit();
-          }
+          if (e.key !== 'Enter') return;
+          const sends = enterToSend ? !e.shiftKey : e.metaKey || e.ctrlKey;
+          if (!sends) return;
+          e.preventDefault();
+          submit();
         }}
       />
       <div className="composer-row">
-        <span className="composer-tip">Shift + Enter for a new line</span>
+        <span className="composer-tip">
+          {enterToSend ? 'Shift + Enter for a new line' : 'Ctrl/⌘ + Enter to send'}
+        </span>
         {streaming ? (
           <button className="send-btn stop" onClick={onStop}>
             <IconStop width={13} height={13} />

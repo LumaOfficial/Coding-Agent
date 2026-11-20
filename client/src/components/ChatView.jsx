@@ -7,7 +7,8 @@ import BrowserCard from './BrowserCard.jsx';
 import ConsentCard from './ConsentCard.jsx';
 import ToolsMenu from './ToolsMenu.jsx';
 import { isLongTask, toolActivity, useSlowFlag, useThinkingLabel } from '../lib/status.js';
-import { IconAlert, IconMenu, IconMoon, IconPanel, IconSpark } from './Icons.jsx';
+import { DEFAULT_SETTINGS } from '../lib/settings.js';
+import { IconAlert, IconGear, IconMenu, IconMoon, IconPanel, IconSpark } from './Icons.jsx';
 
 function buildTimeline(messages) {
   const results = new Map();
@@ -45,7 +46,16 @@ function safeArgs(raw) {
   }
 }
 
-function Turn({ role, content, cards = [], streaming = false, index = 0, streamingLabel = 'Thinking…' }) {
+function Turn({
+  role,
+  content,
+  cards = [],
+  streaming = false,
+  index = 0,
+  streamingLabel = 'Thinking…',
+  showTools = true,
+  showDots = true,
+}) {
   if (role === 'user') {
     return (
       <div className="turn turn-user" style={{ '--turn-index': index }}>
@@ -64,20 +74,22 @@ function Turn({ role, content, cards = [], streaming = false, index = 0, streami
       </div>
       <div className="turn-body">
         {content ? <Markdown>{content}</Markdown> : null}
-        {cards.map((card) => (
-          <ToolCard
-            key={card.id}
-            name={card.name}
-            args={card.args}
-            result={card.result}
-            status={card.status}
-          />
-        ))}
+        {showTools
+          ? cards.map((card) => (
+              <ToolCard
+                key={card.id}
+                name={card.name}
+                args={card.args}
+                result={card.result}
+                status={card.status}
+              />
+            ))
+          : null}
         {streaming && content ? <span className="cursor" /> : null}
         {streaming && !content ? (
           <div className="thinking-row">
             <span className="thinking-label">{streamingLabel}</span>
-            {cards.some((card) => card.status === 'running') ? null : (
+            {!showDots || cards.some((card) => card.status === 'running') ? null : (
               <div className="thinking">
                 <span />
                 <span />
@@ -98,13 +110,13 @@ function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, idle = 'awake' }) {
         <span className="mark-orbit" aria-hidden="true" />
         <IconSpark width={24} height={24} />
       </div>
-      <span className="empty-eyebrow">Cloudflare Workers AI · Gemma 4</span>
+      <span className="empty-eyebrow">Orbit 1.2 · autonomous AI agent</span>
       <h1 className="empty-title">
         Build with <span className="grad">Orbit</span>
       </h1>
       <p className="empty-sub">
-        One agent for your workspace, GitHub, Hugging Face and app-store checks. Every tool is
-        in one menu — or just describe what you need.
+        An AI agent that operates your workspace, GitHub, Hugging Face and app-store checks.
+        Every tool is in one menu — or just describe what you need.
       </p>
       <div className="empty-tools">
         <ToolsMenu
@@ -161,14 +173,18 @@ export default function ChatView({
   autoFix,
   onToggleAutoFix,
   onApplyFixes,
+  settings = DEFAULT_SETTINGS,
+  onOpenSettings,
   idle = 'awake',
 }) {
+  const prefs = { ...DEFAULT_SETTINGS, ...settings };
   const scrollRef = useRef(null);
 
   useEffect(() => {
+    if (!prefs.autoScroll) return;
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, liveText, liveTools, streaming]);
+  }, [messages, liveText, liveTools, streaming, prefs.autoScroll]);
 
   const timeline = buildTimeline(messages);
   const activeModel = models.find((m) => m.id === model);
@@ -179,7 +195,10 @@ export default function ChatView({
     [messages]
   );
   const slowTurn = useSlowFlag(waiting);
-  const thought = useThinkingLabel(waiting, isLongTask(lastUserText) || slowTurn);
+  const thought = useThinkingLabel(
+    waiting,
+    prefs.cosmicThinking && (isLongTask(lastUserText) || slowTurn)
+  );
   const liveStatus = runningTool ? toolActivity(runningTool.name, runningTool.args) : thought;
   const phase = streaming
     ? runningTool
@@ -191,7 +210,7 @@ export default function ChatView({
       ? 'resting'
       : 'ready';
   const statusLabel = {
-    ready: activeModel ? activeModel.label : 'Gemma 4 26B',
+    ready: activeModel ? activeModel.label : 'Orbit 1.2',
     thinking: thought,
     writing: 'Writing…',
     tools: liveStatus,
@@ -207,11 +226,21 @@ export default function ChatView({
           </button>
           <div className="chat-title">
             <span className="chat-title-text">{session?.title || 'New session'}</span>
-            <span className="chat-sub">
-              <span className={`live-dot ${streaming ? 'busy' : ''}`} />
-              <span className={`status-label ${phase}`}>{statusLabel}</span>
-            </span>
+            {prefs.showStatus && (
+              <span className="chat-sub">
+                <span className={`live-dot ${streaming ? 'busy' : ''}`} />
+                <span className={`status-label ${phase}`}>{statusLabel}</span>
+              </span>
+            )}
           </div>
+          <button
+            className="icon-btn"
+            onClick={onOpenSettings}
+            title="Settings"
+            aria-label="Settings"
+          >
+            <IconGear />
+          </button>
           <button
             className={`icon-btn ${panelOpen ? 'active' : ''}`}
             onClick={onTogglePanel}
@@ -260,6 +289,7 @@ export default function ChatView({
                 content={item.content}
                 cards={item.cards}
                 index={index}
+                showTools={prefs.showTools}
               />
             ))
           )}
@@ -271,6 +301,8 @@ export default function ChatView({
               cards={liveTools}
               streaming
               streamingLabel={liveStatus}
+              showTools={prefs.showTools}
+              showDots={prefs.thinkingDots}
             />
           )}
 
@@ -315,6 +347,7 @@ export default function ChatView({
           streaming={streaming}
           onStop={onStop}
           napping={idle !== 'awake' && !streaming}
+          enterToSend={prefs.enterToSend}
         />
         <div className="composer-hint">
           Files land in the workspace — export a ZIP for VS Code.

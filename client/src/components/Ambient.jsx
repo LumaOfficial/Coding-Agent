@@ -95,14 +95,14 @@ function SleepZs({ asleep }) {
   );
 }
 
-export default function Ambient({ level = 'awake' }) {
+export default function Ambient({ level = 'awake', effects = true, spotlight = true }) {
   const stars = useStars(34);
   const dust = useDust(18);
   const rootRef = useRef(null);
 
   useEffect(() => {
     const node = rootRef.current;
-    if (!node) return undefined;
+    if (!node || !spotlight) return undefined;
     let frame = 0;
 
     const onMove = (event) => {
@@ -120,10 +120,14 @@ export default function Ambient({ level = 'awake' }) {
       window.removeEventListener('pointermove', onMove);
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [spotlight]);
 
   return (
-    <div className={`ambient ${level}`} ref={rootRef} aria-hidden="true">
+    <div
+      className={`ambient ${level} ${effects ? '' : 'effects-off'}`}
+      ref={rootRef}
+      aria-hidden="true"
+    >
       <div className="nebula">
         <span className="nebula-blob nebula-1" />
         <span className="nebula-blob nebula-2" />
@@ -180,7 +184,7 @@ export default function Ambient({ level = 'awake' }) {
           />
         ))}
       </div>
-      <div className="spotlight" />
+      {spotlight && <div className="spotlight" />}
       {level !== 'awake' && <SleepZs asleep={level === 'asleep'} />}
     </div>
   );

@@ -408,7 +408,7 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Orbit API listening on http://0.0.0.0:${PORT}`);
-  console.log(`Engine: Cloudflare Workers AI · ${MODEL.remote} (locked)`);
+  console.log(`Engine: Orbit 1.2 · ${MODEL.remote} (locked)`);
   reapOrphanDesktops().then((killed) => {
     if (killed) console.log(`Closed ${killed} leftover desktop sandbox${killed === 1 ? '' : 'es'}`);
   });

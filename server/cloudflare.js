@@ -1,15 +1,15 @@
 import { toolDefinitions } from './tools/index.js';
 
 /**
- * Cloudflare Workers AI — the only model this app runs.
+ * Orbit's engine — the only model this app runs.
  * OpenAI-compatible chat completions with function calling.
  */
 
 export const MODEL = {
   id: 'cloudflare/gemma-4-26b-a4b-it',
   remote: '@cf/google/gemma-4-26b-a4b-it',
-  label: 'Gemma 4 26B',
-  provider: 'Cloudflare Workers AI',
+  label: 'Orbit 1.2',
+  provider: 'Orbit',
   note: 'Locked — the only model',
 };
 
@@ -49,7 +49,7 @@ export async function chatCompletion(messages) {
   if (!configured) {
     return {
       ok: false,
-      error: `Cloudflare Workers AI is not configured. Add ${missing.join(' and ')} to the app secrets.`,
+      error: `The AI engine is not configured. Add ${missing.join(' and ')} to the app secrets.`,
     };
   }
 
@@ -75,7 +75,7 @@ export async function chatCompletion(messages) {
   try {
     response = await post(messages);
   } catch (error) {
-    return { ok: false, error: `Could not reach Cloudflare: ${error.message}` };
+    return { ok: false, error: `Could not reach the engine: ${error.message}` };
   }
 
   // Screenshots are optional: if the model rejects image parts, retry text-only.
@@ -86,7 +86,7 @@ export async function chatCompletion(messages) {
     try {
       response = await post(stripImages(messages));
     } catch (error) {
-      return { ok: false, error: `Could not reach Cloudflare: ${error.message}` };
+      return { ok: false, error: `Could not reach the engine: ${error.message}` };
     }
   }
 
@@ -104,7 +104,7 @@ export async function chatCompletion(messages) {
       data?.error?.message ||
       text.slice(0, 300) ||
       `HTTP ${response.status}`;
-    return { ok: false, error: `Cloudflare ${response.status}: ${detail}` };
+    return { ok: false, error: `Engine ${response.status}: ${detail}` };
   }
 
   const message = data.choices?.[0]?.message;
@@ -114,5 +114,5 @@ export async function chatCompletion(messages) {
     return { ok: true, message: { role: 'assistant', content: data.result.response } };
   }
 
-  return { ok: false, error: 'Cloudflare returned an unexpected response.' };
+  return { ok: false, error: 'The engine returned an unexpected response.' };
 }

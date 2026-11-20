@@ -3,9 +3,9 @@ import { executeTool } from './tools/index.js';
 import { chatCompletion, configStatus } from './cloudflare.js';
 
 /**
- * Orbit agent. Every turn runs on Cloudflare Workers AI with Gemma 4, which
- * calls the local tool registry (workspace, GitHub, Hugging Face, VS Code,
- * platform, autofix, stores). No other model is available.
+ * Orbit agent. Every turn runs on Orbit 1.2, which calls the local tool
+ * registry (workspace, GitHub, Hugging Face, VS Code, platform, autofix,
+ * stores). No other model is available.
  */
 
 const MAX_STEPS = 12;
@@ -88,9 +88,9 @@ export async function runAgent({ sessionId, emit }) {
 
   const { configured, missing } = configStatus();
   if (!configured) {
-    const note = `**Cloudflare Workers AI is not connected.**\n\nAdd ${missing
+    const note = `**Orbit's engine is not connected.**\n\nAdd ${missing
       .map((key) => `\`${key}\``)
-      .join(' and ')} in the app secrets, then send the message again. Gemma 4 is the only model this app runs.`;
+      .join(' and ')} in the app secrets, then send the message again.`;
     await finish(sessionId, emit, note);
     return;
   }
@@ -117,7 +117,7 @@ export async function runAgent({ sessionId, emit }) {
   for (let step = 0; step < MAX_STEPS; step += 1) {
     const completion = await chatCompletion(pruneImages(history));
     if (!completion.ok) {
-      await finish(sessionId, emit, `**Gemma 4 request failed.**\n\n${completion.error}`, executed);
+      await finish(sessionId, emit, `**Orbit's engine hit an error.**\n\n${completion.error}`, executed);
       return;
     }
 

@@ -1,4 +1,4 @@
-import { IconLogout, IconPlus, IconSpark, IconTrash } from './Icons.jsx';
+import { IconGear, IconLogout, IconPlus, IconSpark, IconTrash } from './Icons.jsx';
 
 function relativeTime(iso) {
   if (!iso) return '';
@@ -29,6 +29,7 @@ export default function Sidebar({
   idle = 'awake',
   user = null,
   onSignOut,
+  onOpenSettings,
 }) {
   const github = integrations?.github;
   const hf = integrations?.huggingface;
@@ -46,10 +47,10 @@ export default function Sidebar({
             <IconSpark width={17} height={17} />
           </div>
           <div>
-            <div className="brand-name">Orbit</div>
+            <div className="brand-name">Orbit 1.2</div>
             <div className="brand-sub">
               {idle === 'awake'
-                ? 'Local auto-fix agent'
+                ? 'AI agent · operates your stack'
                 : idle === 'asleep'
                   ? 'snoring softly · zzz'
                   : 'resting · zzz'}
@@ -101,6 +102,10 @@ export default function Sidebar({
         </div>
 
         <div className="sidebar-footer">
+          <button className="settings-link" onClick={onOpenSettings}>
+            <IconGear width={14} height={14} />
+            Settings
+          </button>
           {user && (
             <div className="user-row">
               <span className="user-avatar">
@@ -125,8 +130,8 @@ export default function Sidebar({
             <span>Engine</span>
             <span className="status-value">
               {engineOk
-                ? 'Cloudflare · Gemma 4'
-                : `Cloudflare · ${engine?.missing?.length ? 'add key' : 'offline'}`}
+                ? 'Orbit 1.2 · online'
+                : `Orbit 1.2 · ${engine?.missing?.length ? 'add key' : 'offline'}`}
             </span>
           </div>
           <div className="status-row">
