@@ -16,6 +16,10 @@ async function request(path, { method = 'GET', body } = {}) {
   return data;
 }
 
+/** The extension ZIP is generated for the app origin it is downloaded from. */
+export const extensionZipUrl = () =>
+  `/api/browser/extension.zip?origin=${encodeURIComponent(window.location.origin)}`;
+
 export const api = {
   me: () => request('/api/auth/me'),
   signup: (body) => request('/api/auth/signup', { method: 'POST', body }),

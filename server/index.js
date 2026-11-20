@@ -74,7 +74,8 @@ next to it), the API in server/ and the web client in client/.
 3. Start the client (optional, the extension does not need it)
    cd client && npm install && npm run dev      # http://localhost:5173
 
-4. Open the Orbit popup, point it at the API and press Save & connect.
+4. Open the Orbit popup. It already points at the Orbit app this ZIP came from;
+   press Save & connect (edit the address only if you run the API somewhere else).
 `;
 
 app.use(express.json({ limit: '8mb' }));
@@ -258,8 +259,14 @@ app.get('/api/browser/extension.zip', (req, res) => {
   archive.on('error', () => res.destroy());
   archive.pipe(res);
 
+  // The extension connects back to the app it was downloaded from, so the popup is
+  // already pointed at the right API and nothing has to be typed in.
+  const requested = String(req.query.origin || '').replace(/\/+$/, '');
+  const origin = /^https?:\/\/[^/]+$/i.test(requested) ? requested : '';
+
   const skip = ['**/node_modules/**', '**/dist/**', '**/.data/**'];
-  archive.directory(extensionDir, false);
+  archive.glob('**/*', { cwd: extensionDir, dot: true, ignore: ['config.js'] });
+  archive.append(`self.ORBIT_API = ${JSON.stringify(origin)};\n`, { name: 'config.js' });
   archive.append(extensionReadme, { name: 'README.txt' });
   archive.glob('server/**/*', { cwd: appRoot, dot: true, ignore: skip });
   archive.glob('client/**/*', { cwd: appRoot, dot: true, ignore: skip });

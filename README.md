@@ -17,8 +17,9 @@ via Cloudflare Workers AI — it is the only model the app offers.
   `browser_click`, `browser_type`, `browser_key` and `browser_scroll` publish an approval card in
   the chat and only run when you press **Allow**. The extension injects its content script on
   demand (`scripting` + `<all_urls>` host access), moves a visible Orbit cursor, dispatches real
-  clicks and types character by character, then returns a screenshot. Point its popup at the API
-  (`http://localhost:8000` by default). Declining tells the agent to stop and ask what you want.
+  clicks and types character by character, then returns a screenshot. The downloaded ZIP already points its
+  popup at the app it came from (edit the address only when the API runs elsewhere). Declining
+  tells the agent to stop and ask what you want.
 - **Consent cards** — anything with a real side effect asks first in the chat and only runs when
   you press **Allow**: deleting a workspace file, overwriting an existing one, committing to
   GitHub, creating a branch, opening a pull request, and running a shell command on Orbit's own

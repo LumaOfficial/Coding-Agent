@@ -14,6 +14,11 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
       },
+      '/browser/ws': {
+        target: apiTarget,
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 });

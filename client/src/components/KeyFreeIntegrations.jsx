@@ -7,6 +7,7 @@ import {
   IconSend,
   IconSpark,
 } from './Icons.jsx';
+import { extensionZipUrl } from '../api.js';
 
 /**
  * Key-free integrations. Nothing here asks for an API key or a client ID: Orbit
@@ -84,7 +85,7 @@ export default function KeyFreeIntegrations({ connected }) {
       ))}
 
       {!connected && (
-        <a className="btn-small" href="/api/browser/extension.zip" download>
+        <a className="btn-small" href={extensionZipUrl()} download>
           <IconDownload width={13} height={13} />
           Get the extension
         </a>

@@ -13,6 +13,7 @@ import StoreTests from './StoreTests.jsx';
 import Platforms from './Platforms.jsx';
 import PlatformCard from './PlatformCard.jsx';
 import KeyFreeIntegrations from './KeyFreeIntegrations.jsx';
+import { extensionZipUrl } from '../api.js';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -218,7 +219,7 @@ export default function RightPanel({
               'Open the Orbit extension popup, point it at this API and press Save & connect',
             ]}
             action={
-              <a className="btn-small" href="/api/browser/extension.zip" download>
+              <a className="btn-small" href={extensionZipUrl()} download>
                 <IconDownload width={13} height={13} />
                 Extension ZIP
               </a>

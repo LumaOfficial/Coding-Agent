@@ -2,17 +2,22 @@
    in the user's own tab. Read-only requests pass straight through; anything
    that changes the page only arrives here after the user approved it. */
 
-const DEFAULT_API = 'http://localhost:8000';
+const FALLBACK_API = 'http://localhost:8000';
+/* The downloadable ZIP ships config.js with the Orbit app origin that served it. */
+const PACKAGED_API = String(self.ORBIT_API || '').replace(/\/+$/, '');
 
 let socket = null;
 let retry = 0;
-let status = { state: 'idle', api: DEFAULT_API, detail: '' };
+let status = { state: 'idle', api: PACKAGED_API || FALLBACK_API, detail: '' };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function getApi() {
   const { apiUrl } = await chrome.storage.local.get('apiUrl');
-  return String(apiUrl || DEFAULT_API).replace(/\/+$/, '');
+  const stored = String(apiUrl || '').replace(/\/+$/, '');
+  // A value the user typed wins; the stock default defers to the packaged app origin.
+  if (stored && stored !== FALLBACK_API) return stored;
+  return PACKAGED_API || stored || FALLBACK_API;
 }
 
 function wsUrl(api) {
