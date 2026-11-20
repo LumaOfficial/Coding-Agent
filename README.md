@@ -1,7 +1,7 @@
 # Forge — coding agent
 
 A chat IDE whose agent works on your code through tools: workspace edits, GitHub, Hugging Face,
-VS Code and app-store checks. Every turn runs on **Gemma 4** (`@cf/google/gemma-4-26b-a4b-instruct`)
+VS Code and app-store checks. Every turn runs on **Gemma 4** (`@cf/google/gemma-4-26b-a4b-it`)
 via Cloudflare Workers AI — it is the only model the app offers.
 
 - **Model** — Gemma 4 calls the tool registry; there is no model picker beyond it and no other

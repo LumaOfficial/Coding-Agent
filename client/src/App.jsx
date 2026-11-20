@@ -10,7 +10,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [models, setModels] = useState([]);
-  const [model, setModel] = useState('cloudflare/gemma-4-26b-a4b-instruct');
+  const [model, setModel] = useState('cloudflare/gemma-4-26b-a4b-it');
   const [integrations, setIntegrations] = useState(null);
   const [streaming, setStreaming] = useState(false);
   const [liveText, setLiveText] = useState('');

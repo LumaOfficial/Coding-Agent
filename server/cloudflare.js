@@ -6,8 +6,8 @@ import { toolDefinitions } from './tools/index.js';
  */
 
 export const MODEL = {
-  id: 'cloudflare/gemma-4-26b-a4b-instruct',
-  remote: '@cf/google/gemma-4-26b-a4b-instruct',
+  id: 'cloudflare/gemma-4-26b-a4b-it',
+  remote: '@cf/google/gemma-4-26b-a4b-it',
   label: 'Gemma 4 26B',
   provider: 'Cloudflare Workers AI',
   note: 'Locked — the only model',
