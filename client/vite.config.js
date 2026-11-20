@@ -14,6 +14,13 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
       },
+      // The browser extension connects to the page's own origin; forward its
+      // socket to the API so `wss://<app host>/browser/ws` works without CORS.
+      '/browser/ws': {
+        target: apiTarget,
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 });

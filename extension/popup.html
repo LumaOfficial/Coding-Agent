@@ -30,6 +30,7 @@
       }
       button.primary { background: linear-gradient(135deg, #8b6cff, #6f8cff); border-color: transparent; }
       .hint { margin-top: 10px; font-size: 10.5px; color: #6f7890; }
+      .hint code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; color: #9aa3b5; }
     </style>
   </head>
   <body>
@@ -46,6 +47,10 @@
       <button id="reconnect">Reconnect</button>
     </div>
 
+    <p class="hint">
+      Paste the API URL shown in Orbit → Integrations → Your browser. <code>localhost:8000</code>
+      only works when the API runs on your own machine.
+    </p>
     <p class="hint">
       Clicks, typing and navigation always wait for your approval in the chat. Reads (snapshots,
       screenshots) run straight away.

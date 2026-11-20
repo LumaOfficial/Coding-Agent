@@ -77,8 +77,11 @@ Chrome loads the folder that **contains `manifest.json`** — in this repository
    missing or unreadable", because `manifest.json` sits one level down.
 3. Open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked** and select that
    `extension` folder.
-4. Open the Orbit popup, point it at the API (`http://localhost:8000` by default) and press
-   **Save & connect**. The badge clears once the socket is open.
+4. Open the Orbit popup, paste the API URL shown in the app's **Integrations → Your browser** card
+   (the app's own origin — the dev server proxies `/browser/ws` to the API) and press **Save &
+   connect**. `http://localhost:8000` only works when you run the API there yourself. The badge
+   clears once the socket is open; a `!` badge with "Could not reach the API" means the URL is
+   wrong or the API is down.
 
 ## Credentials
 

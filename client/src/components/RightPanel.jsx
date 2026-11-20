@@ -19,7 +19,32 @@ function formatSize(bytes) {
   return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
-function IntegrationCard({ icon, title, connected, statusText, description, steps, action }) {
+function BrowserApiUrl() {
+  const [copied, setCopied] = useState(false);
+  const url = window.location.origin;
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
+  return (
+    <div className="integration-url">
+      <code title={url}>{url}</code>
+      <button className="btn-small ghost" onClick={copy}>
+        <IconCopy width={12} height={12} />
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </div>
+  );
+}
+
+function IntegrationCard({ icon, title, connected, statusText, description, steps, note, action }) {
   return (
     <div className={`integration ${connected ? 'connected' : ''}`}>
       <div className="integration-head">
@@ -40,6 +65,7 @@ function IntegrationCard({ icon, title, connected, statusText, description, step
           ))}
         </ol>
       )}
+      {note}
       {action}
     </div>
   );
@@ -215,8 +241,9 @@ export default function RightPanel({
             steps={[
               'Download the extension ZIP below and unzip it',
               'Open chrome://extensions, turn on Developer mode and choose Load unpacked → the folder holding manifest.json (the extension folder if you unzipped the GitHub repo)',
-              'Open the Orbit extension popup, point it at this API and press Save & connect',
+              'Open the Orbit extension popup, paste the API URL below and press Save & connect',
             ]}
+            note={<BrowserApiUrl />}
             action={
               <a className="btn-small" href="/api/browser/extension.zip" download>
                 <IconDownload width={13} height={13} />
