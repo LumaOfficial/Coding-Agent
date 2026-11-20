@@ -27,8 +27,8 @@ export default function Composer({ onSend, streaming, onStop, napping = false })
         value={value}
         placeholder={
           napping
-            ? 'Forge is napping… type to wake it up'
-            : 'Paste code or ask Forge to fix your workspace…'
+            ? 'Orbit is napping… type to wake it up'
+            : 'Paste code or ask Orbit to fix your workspace…'
         }
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {

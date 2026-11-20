@@ -3,7 +3,7 @@ import { executeTool } from './tools/index.js';
 import { chatCompletion, configStatus } from './cloudflare.js';
 
 /**
- * Forge agent. Every turn runs on Cloudflare Workers AI with Gemma 4, which
+ * Orbit agent. Every turn runs on Cloudflare Workers AI with Gemma 4, which
  * calls the local tool registry (workspace, GitHub, Hugging Face, VS Code,
  * platform, autofix, stores). No other model is available.
  */
@@ -11,7 +11,7 @@ import { chatCompletion, configStatus } from './cloudflare.js';
 const MAX_STEPS = 12;
 const HISTORY_LIMIT = 20;
 
-const SYSTEM_PROMPT = `You are Forge, a coding agent working inside the user's workspace.
+const SYSTEM_PROMPT = `You are Orbit, a coding agent working inside the user's workspace.
 
 Rules:
 - You have your own computer with internet access: use web_search to look things up and web_fetch to open a page and read it. Prefer official docs over guessing.
@@ -152,7 +152,7 @@ export async function runAgent({ sessionId, emit }) {
         history.push({
           role: 'user',
           content: [
-            { type: 'text', text: `Screenshot of Forge's desktop after ${name}:` },
+            { type: 'text', text: `Screenshot of Orbit's desktop after ${name}:` },
             { type: 'image_url', image_url: { url: result.image } },
           ],
         });

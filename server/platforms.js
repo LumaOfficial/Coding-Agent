@@ -1,5 +1,5 @@
 /**
- * Platform catalog — the services Forge can be pointed at.
+ * Platform catalog — the services Orbit can be pointed at.
  *
  * Each entry declares the env var(s) that connect it, whether its API is
  * readable without credentials, and (where the API has a stable base URL) how

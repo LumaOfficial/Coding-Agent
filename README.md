@@ -1,4 +1,4 @@
-# Forge — coding agent
+# Orbit — coding agent
 
 A chat IDE whose agent works on your code through tools: workspace edits, GitHub, Hugging Face,
 VS Code and app-store checks. Every turn runs on **Gemma 4** (`@cf/google/gemma-4-26b-a4b-it`)
@@ -21,7 +21,7 @@ via Cloudflare Workers AI — it is the only model the app offers.
   restarts — so idle credits are never spent.
 - **Full browser window** — on a wide viewport the app fills the screen and docks the session
   sidebar and workspace panel as real columns; in a narrow extension panel it falls back to the
-  single-column drawer layout. Idle for a while and Forge drifts off — little Z's, then a snoring
+  single-column drawer layout. Idle for a while and Orbit drifts off — little Z's, then a snoring
   bubble — until you type again.
 - **Always-on scan** — every session open and every turn ends with an automatic scan of the
   workspace. Safe edits are applied by default (toggle **Auto** off to review first); anything
@@ -60,7 +60,7 @@ cd client && npm install && npm run dev   # UI on :5173, proxies /api
 | `CLOUDFLARE_ACCOUNT_ID` | yes | Cloudflare account id used in the Workers AI endpoint |
 | `GITHUB_TOKEN` | no | Only for commits and pull requests, `repo` scope |
 | `HF_TOKEN` | no | Only for private Hugging Face repos and higher rate limits |
-| `E2B_API_KEY` | no | Forge's own Linux desktop (Chromium, terminal, screenshots). Without it the desktop tools report that the computer is not connected |
+| `E2B_API_KEY` | no | Orbit's own Linux desktop (Chromium, terminal, screenshots). Without it the desktop tools report that the computer is not connected |
 
 `GROQ_API_KEY` is not read anywhere. Public GitHub reads and Hugging Face search work without
 their tokens.

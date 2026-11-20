@@ -44,7 +44,7 @@ export default function Sidebar({
             <IconSpark width={17} height={17} />
           </div>
           <div>
-            <div className="brand-name">Forge</div>
+            <div className="brand-name">Orbit</div>
             <div className="brand-sub">
               {idle === 'awake'
                 ? 'Local auto-fix agent'
@@ -69,7 +69,7 @@ export default function Sidebar({
 
         <div className="session-list">
           {sessions.length === 0 && (
-            <div className="session-empty">No sessions yet. Ask Forge to build something.</div>
+            <div className="session-empty">No sessions yet. Ask Orbit to build something.</div>
           )}
           {sessions.map((s) => (
             <div

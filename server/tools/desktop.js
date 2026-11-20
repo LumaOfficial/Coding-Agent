@@ -1,5 +1,5 @@
 /**
- * Desktop tools — Forge drives its own E2B Linux machine: Chromium, mouse,
+ * Desktop tools — Orbit drives its own E2B Linux machine: Chromium, mouse,
  * keyboard, a shell and screenshots. Handlers return { text, image } so the
  * agent can look at the screen right after acting on it.
  */
@@ -70,7 +70,7 @@ export const definitions = [
     function: {
       name: 'desktop_launch',
       description:
-        'Start Forge\'s own isolated Linux desktop (E2B) and open an app in it, Chromium by default. Call this before driving a website. Returns a screenshot of the screen.',
+        'Start Orbit\'s own isolated Linux desktop (E2B) and open an app in it, Chromium by default. Call this before driving a website. Returns a screenshot of the screen.',
       parameters: {
         type: 'object',
         properties: {
@@ -87,7 +87,7 @@ export const definitions = [
     function: {
       name: 'desktop_navigate',
       description:
-        'Open a URL in Chromium on Forge\'s desktop (launches Chromium if needed) and return the page title plus a screenshot of what is on screen.',
+        'Open a URL in Chromium on Orbit\'s desktop (launches Chromium if needed) and return the page title plus a screenshot of what is on screen.',
       parameters: {
         type: 'object',
         properties: {
@@ -106,7 +106,7 @@ export const definitions = [
     function: {
       name: 'desktop_click',
       description:
-        'Click at pixel coordinates on Forge\'s desktop and return a screenshot. Coordinates are in the screenshot you last received (top-left is 0,0).',
+        'Click at pixel coordinates on Orbit\'s desktop and return a screenshot. Coordinates are in the screenshot you last received (top-left is 0,0).',
       parameters: {
         type: 'object',
         properties: {
@@ -127,7 +127,7 @@ export const definitions = [
     function: {
       name: 'desktop_type',
       description:
-        'Type text into whatever has focus on Forge\'s desktop, optionally pressing Enter afterwards (useful for search boxes and forms).',
+        'Type text into whatever has focus on Orbit\'s desktop, optionally pressing Enter afterwards (useful for search boxes and forms).',
       parameters: {
         type: 'object',
         properties: {
@@ -143,7 +143,7 @@ export const definitions = [
     function: {
       name: 'desktop_key',
       description:
-        'Press a key or key combination on Forge\'s desktop, e.g. "enter", "tab", ["ctrl", "l"] to focus the address bar, ["ctrl", "t"] for a new tab.',
+        'Press a key or key combination on Orbit\'s desktop, e.g. "enter", "tab", ["ctrl", "l"] to focus the address bar, ["ctrl", "t"] for a new tab.',
       parameters: {
         type: 'object',
         properties: {
@@ -161,7 +161,7 @@ export const definitions = [
     function: {
       name: 'desktop_terminal',
       description:
-        'Run a bash command inside Forge\'s desktop VM (Ubuntu, node, python, git available) and get stdout, stderr and the exit code. Use it to install packages, run a test suite or inspect the VM.',
+        'Run a bash command inside Orbit\'s desktop VM (Ubuntu, node, python, git available) and get stdout, stderr and the exit code. Use it to install packages, run a test suite or inspect the VM.',
       parameters: {
         type: 'object',
         properties: {
@@ -177,7 +177,7 @@ export const definitions = [
     function: {
       name: 'desktop_screenshot',
       description:
-        'Capture what is on Forge\'s desktop right now. Use it to check the result of an action, confirm a page rendered, or inspect an error on screen.',
+        'Capture what is on Orbit\'s desktop right now. Use it to check the result of an action, confirm a page rendered, or inspect an error on screen.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -186,7 +186,7 @@ export const definitions = [
     function: {
       name: 'desktop_close',
       description:
-        'Shut down Forge\'s desktop immediately and stop its credit usage. Call it when you are done with the computer.',
+        'Shut down Orbit\'s desktop immediately and stop its credit usage. Call it when you are done with the computer.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -202,7 +202,7 @@ export const handlers = {
       const title = await windowTitle(sandbox);
       const { image, saved } = await shot(ctx.sessionId, sandbox);
       return {
-        text: `Opened ${app} on Forge's desktop.${title ? `\nWindow: ${title}` : ''}\n${screenshotLine(saved)}\n${idleNote()}`,
+        text: `Opened ${app} on Orbit's desktop.${title ? `\nWindow: ${title}` : ''}\n${screenshotLine(saved)}\n${idleNote()}`,
         image,
       };
     });
@@ -317,7 +317,7 @@ export const handlers = {
   async desktop_close(args, ctx) {
     const closed = await closeDesktop(ctx.sessionId);
     return closed
-      ? 'Forge\'s desktop is shut down — no more credits are being used.'
+      ? 'Orbit\'s desktop is shut down — no more credits are being used.'
       : 'No desktop was running, so there was nothing to shut down.';
   },
 };

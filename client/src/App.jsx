@@ -28,7 +28,7 @@ export default function App() {
   const [scanning, setScanning] = useState(false);
   const [autoFix, setAutoFix] = useState(() => {
     try {
-      return localStorage.getItem('forge.autoFix') !== 'off';
+      return localStorage.getItem('orbit.autoFix') !== 'off';
     } catch {
       return true;
     }
@@ -42,7 +42,7 @@ export default function App() {
   useEffect(() => {
     autoFixRef.current = autoFix;
     try {
-      localStorage.setItem('forge.autoFix', autoFix ? 'on' : 'off');
+      localStorage.setItem('orbit.autoFix', autoFix ? 'on' : 'off');
     } catch {
       /* ignore */
     }

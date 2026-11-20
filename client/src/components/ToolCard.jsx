@@ -118,7 +118,7 @@ export default function ToolCard({ name, args, result, status = 'ok' }) {
               <div className="tool-label">Output</div>
               {shot && (
                 <a className="tool-shot" href={shot} target="_blank" rel="noreferrer">
-                  <img src={shot} alt="Forge desktop screenshot" loading="lazy" />
+                  <img src={shot} alt="Orbit desktop screenshot" loading="lazy" />
                 </a>
               )}
               <pre>{result || '(empty)'}</pre>

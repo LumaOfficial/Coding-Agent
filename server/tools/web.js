@@ -1,5 +1,5 @@
 /**
- * Forge's own browser. The agent searches the web and opens pages itself —
+ * Orbit's own browser. The agent searches the web and opens pages itself —
  * no API key, no user tab. Search tries Bing, then DuckDuckGo's instant
  * answer API, then Wikipedia. web_fetch reads a public page and returns text.
  */
@@ -159,7 +159,7 @@ function assertPublicUrl(raw) {
         (Number(v4[1]) === 192 && Number(v4[2]) === 168) ||
         (Number(v4[1]) === 169 && Number(v4[2]) === 254)));
   if (blocked) {
-    throw new Error('That address is on a private network — Forge only opens public pages.');
+    throw new Error('That address is on a private network — Orbit only opens public pages.');
   }
   return url;
 }
@@ -170,7 +170,7 @@ export const definitions = [
     function: {
       name: 'web_search',
       description:
-        'Search the live web from Forge\'s own browser and get result titles, URLs and snippets. Use it for anything current, for library versions, error messages or docs you are unsure about, then open a result with web_fetch. No API key needed.',
+        'Search the live web from Orbit\'s own browser and get result titles, URLs and snippets. Use it for anything current, for library versions, error messages or docs you are unsure about, then open a result with web_fetch. No API key needed.',
       parameters: {
         type: 'object',
         properties: {

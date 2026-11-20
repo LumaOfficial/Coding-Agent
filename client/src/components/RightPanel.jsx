@@ -142,7 +142,7 @@ export default function RightPanel({
               </div>
               <div className="panel-empty-title">Workspace is empty</div>
               <p>
-                Ask Forge to build something — every file it writes shows up here, ready to
+                Ask Orbit to build something — every file it writes shows up here, ready to
                 download and open in VS Code.
               </p>
             </div>
@@ -185,7 +185,7 @@ export default function RightPanel({
 
           <IntegrationCard
             icon={<IconGlobe width={15} height={15} />}
-            title="Forge's computer"
+            title="Orbit's computer"
             connected={integrations?.desktop?.configured}
             statusText={
               integrations?.desktop?.configured

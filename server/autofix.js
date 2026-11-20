@@ -112,7 +112,7 @@ function checkJsSyntax(code, filePath, ext, state) {
   const run = (suffix) => {
     const tmp = path.join(
       os.tmpdir(),
-      `forge-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}${suffix}`
+      `orbit-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}${suffix}`
     );
     fs.writeFileSync(tmp, code);
     try {

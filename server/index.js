@@ -310,7 +310,7 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 }
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Forge API listening on http://0.0.0.0:${PORT}`);
+  console.log(`Orbit API listening on http://0.0.0.0:${PORT}`);
   console.log(`Engine: Cloudflare Workers AI · ${MODEL.remote} (locked)`);
   reapOrphanDesktops().then((killed) => {
     if (killed) console.log(`Closed ${killed} leftover desktop sandbox${killed === 1 ? '' : 'es'}`);

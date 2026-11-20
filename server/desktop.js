@@ -1,5 +1,5 @@
 /**
- * Forge's own computer. Each chat session can own one E2B desktop sandbox —
+ * Orbit's own computer. Each chat session can own one E2B desktop sandbox —
  * an isolated Linux (Xfce) machine with Chromium, a terminal and a mouse.
  *
  * Credits are the scarce resource, so a sandbox never outlives its usefulness:
@@ -49,12 +49,12 @@ function scheduleIdleKill(sessionId, entry) {
 
 async function createEntry(sessionId) {
   if (!desktopConfigured()) {
-    throw new Error('Forge has no computer yet — add E2B_API_KEY in the app secrets.');
+    throw new Error('Orbit has no computer yet — add E2B_API_KEY in the app secrets.');
   }
   const { Sandbox } = await loadSdk();
   const sandbox = await Sandbox.create({
     timeoutMs: IDLE_MS,
-    metadata: { app: 'forge', session: sessionId },
+    metadata: { app: 'orbit', session: sessionId },
   });
   return {
     sandbox,
@@ -113,7 +113,7 @@ export async function closeAllDesktops() {
 }
 
 /**
- * A restarted API owns no sandbox any more, so any Forge sandbox still running
+ * A restarted API owns no sandbox any more, so any Orbit sandbox still running
  * is an orphan burning credits. Kill them at boot.
  */
 export async function reapOrphanDesktops() {
@@ -129,7 +129,7 @@ export async function reapOrphanDesktops() {
     }
     let killed = 0;
     for (const item of items) {
-      if (item.metadata?.app !== 'forge') continue;
+      if (item.metadata?.app !== 'orbit') continue;
       try {
         const sandbox = await Sandbox.connect(item.sandboxId);
         await sandbox.kill();

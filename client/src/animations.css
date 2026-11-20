@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Forge — motion & effects
+   Orbit — motion & effects
    A second layer on top of the base design: ambient aurora, stars, a pointer
    spotlight, entrance choreography, micro-interactions and a sleeping state
    with drifting Z's. Everything respects prefers-reduced-motion at the end.
@@ -455,6 +455,10 @@
 
 .chat-sub .status-label {
   transition: color 0.2s;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat-sub .status-label.thinking {
@@ -618,12 +622,14 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
   padding: 6px 10px 6px 0;
   font-size: 12.5px;
   color: var(--text-dim);
 }
 
 .thinking-label {
+  min-width: 0;
   background: linear-gradient(90deg, #9aa5ba, #c3b4ff, #58d5ff, #9aa5ba);
   background-size: 300% 100%;
   -webkit-background-clip: text;
