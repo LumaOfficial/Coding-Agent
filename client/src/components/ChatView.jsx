@@ -1,0 +1,379 @@
+import { useEffect, useMemo, useRef } from 'react';
+import Markdown from './Markdown.jsx';
+import ToolCard from './ToolCard.jsx';
+import Composer from './Composer.jsx';
+import ScanCard from './ScanCard.jsx';
+import BrowserCard from './BrowserCard.jsx';
+import ConsentCard from './ConsentCard.jsx';
+import ToolsMenu from './ToolsMenu.jsx';
+import { isLongTask, toolActivity, useSlowFlag, useThinkingLabel } from '../lib/status.js';
+import { DEFAULT_SETTINGS } from '../lib/settings.js';
+import { IconAlert, IconGear, IconMenu, IconMoon, IconPanel, IconSpark } from './Icons.jsx';
+
+function buildTimeline(messages) {
+  const results = new Map();
+  for (const m of messages) {
+    if (m.role === 'tool') results.set(m.tool_call_id, m);
+  }
+  const timeline = [];
+  for (const m of messages) {
+    if (m.role === 'tool') continue;
+    if (m.role === 'assistant') {
+      const cards = (m.tool_calls || []).map((call) => {
+        const toolResult = results.get(call.id);
+        return {
+          id: call.id,
+          name: call.name,
+          args: safeArgs(call.arguments),
+          result: toolResult?.content,
+          status: toolResult ? (toolResult.content.startsWith('Error:') ? 'error' : 'ok') : 'running',
+        };
+      });
+      if (!m.content && cards.length === 0) continue;
+      timeline.push({ ...m, cards });
+    } else {
+      timeline.push(m);
+    }
+  }
+  return timeline;
+}
+
+function safeArgs(raw) {
+  try {
+    return JSON.parse(raw || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function Turn({
+  role,
+  content,
+  cards = [],
+  streaming = false,
+  index = 0,
+  streamingLabel = 'Thinking…',
+  showTools = true,
+  showDots = true,
+  expandTools = false,
+  at = '',
+  showTime = false,
+}) {
+  const time = showTime ? formatTime(at) : '';
+  if (role === 'user') {
+    return (
+      <div className="turn turn-user" style={{ '--turn-index': index }}>
+        <div className="turn-tag">
+          You{time ? <span className="turn-time">{time}</span> : null}
+        </div>
+        <div className="turn-user-body">{content}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="turn turn-assistant" style={{ '--turn-index': index }}>
+      <div className="turn-head">
+        <span className="avatar">
+          <IconSpark width={13} height={13} />
+        </span>
+        <span className="turn-tag">Orbit</span>
+        {time ? <span className="turn-time">{time}</span> : null}
+      </div>
+      <div className="turn-body">
+        {content ? <Markdown>{content}</Markdown> : null}
+        {showTools
+          ? cards.map((card) => (
+              <ToolCard
+                key={card.id}
+                name={card.name}
+                args={card.args}
+                result={card.result}
+                status={card.status}
+                defaultOpen={expandTools}
+              />
+            ))
+          : null}
+        {streaming && content ? <span className="cursor" /> : null}
+        {streaming && !content ? (
+          <div className="thinking-row">
+            <span className="thinking-label">{streamingLabel}</span>
+            {!showDots || cards.some((card) => card.status === 'running') ? null : (
+              <div className="thinking">
+                <span />
+                <span />
+                <span />
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ onSend, onOpenPanel, onOpenStoreTests, starters = true, idle = 'awake' }) {
+  return (
+    <div className="empty">
+      <div className="empty-mark">
+        <span className="mark-orbit" aria-hidden="true" />
+        <IconSpark width={24} height={24} />
+      </div>
+      <span className="empty-eyebrow">Orbit 1.2 · autonomous AI agent</span>
+      <h1 className="empty-title">
+        Build with <span className="grad">Orbit</span>
+      </h1>
+      <p className="empty-sub">
+        An AI agent that operates your workspace, GitHub, Hugging Face and app-store checks.
+        Every tool is in one menu — or just describe what you need.
+      </p>
+      <div className="empty-tools">
+        <ToolsMenu
+          inline
+          onSend={onSend}
+          onOpenPanel={onOpenPanel}
+          onOpenStoreTests={onOpenStoreTests}
+        />
+      </div>
+      {starters && (
+        <div className="empty-chips">
+          <span className="chip">Auto-fix</span>
+          <span className="chip">Debug</span>
+          <span className="chip">Web search</span>
+          <span className="chip">Desktop</span>
+          <span className="chip">GitHub</span>
+          <span className="chip">Hugging Face</span>
+          <span className="chip">Store tests</span>
+        </div>
+      )}
+      {idle !== 'awake' && (
+        <div className="idle-note">
+          <IconMoon width={13} height={13} />
+          Orbit is {idle === 'asleep' ? 'snoring' : 'resting'} — type to wake it up.
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ChatView({
+  session,
+  messages,
+  models,
+  model,
+  onModelChange,
+  onSend,
+  onStop,
+  streaming,
+  liveText,
+  liveTools,
+  error,
+  browserRequest,
+  browserBusy,
+  onBrowserApprove,
+  consentRequest,
+  consentBusy,
+  onConsentApprove,
+  panelOpen,
+  onTogglePanel,
+  onToggleSidebar,
+  onOpenStoreTests,
+  onOpenPanel,
+  scan,
+  scanning,
+  autoFix,
+  onToggleAutoFix,
+  onApplyFixes,
+  settings = DEFAULT_SETTINGS,
+  onOpenSettings,
+  idle = 'awake',
+}) {
+  const prefs = { ...DEFAULT_SETTINGS, ...settings };
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (!prefs.autoScroll) return;
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, liveText, liveTools, streaming, prefs.autoScroll]);
+
+  const timeline = buildTimeline(messages);
+  const activeModel = models.find((m) => m.id === model);
+  const runningTool = liveTools.find((tool) => tool.status === 'running');
+  const waiting = streaming && !liveText && !runningTool;
+  const lastUserText = useMemo(
+    () => [...(messages || [])].reverse().find((m) => m.role === 'user')?.content || '',
+    [messages]
+  );
+  const slowTurn = useSlowFlag(waiting);
+  const thought = useThinkingLabel(
+    waiting,
+    prefs.cosmicThinking && (isLongTask(lastUserText) || slowTurn)
+  );
+  const liveStatus = runningTool ? toolActivity(runningTool.name, runningTool.args) : thought;
+  const phase = streaming
+    ? runningTool
+      ? 'tools'
+      : liveText
+        ? 'writing'
+        : 'thinking'
+    : idle !== 'awake'
+      ? 'resting'
+      : 'ready';
+  const statusLabel = {
+    ready: activeModel ? activeModel.label : 'Orbit 1.2',
+    thinking: thought,
+    writing: 'Writing…',
+    tools: liveStatus,
+    resting: idle === 'asleep' ? 'Snoring… zzz' : 'Resting… zzz',
+  }[phase];
+
+  return (
+    <div className="chat">
+      <header className="chat-header">
+        <div className="header-top">
+          <button className="icon-btn" onClick={onToggleSidebar} title="Sessions">
+            <IconMenu />
+          </button>
+          <div className="chat-title">
+            <span className="chat-title-text">{session?.title || 'New session'}</span>
+            {prefs.showStatus && (
+              <span className="chat-sub">
+                <span className={`live-dot ${streaming ? 'busy' : ''}`} />
+                <span className={`status-label ${phase}`}>{statusLabel}</span>
+              </span>
+            )}
+          </div>
+          <button
+            className="icon-btn"
+            onClick={onOpenSettings}
+            title="Settings"
+            aria-label="Settings"
+          >
+            <IconGear />
+          </button>
+          <button
+            className={`icon-btn ${panelOpen ? 'active' : ''}`}
+            onClick={onTogglePanel}
+            title="Toggle workspace panel"
+          >
+            <IconPanel />
+          </button>
+        </div>
+
+        <div className="toolbar">
+          <ToolsMenu
+            onSend={onSend}
+            onOpenPanel={onOpenPanel}
+            onOpenStoreTests={onOpenStoreTests}
+            disabled={streaming}
+          />
+          <select
+            className="model-select"
+            value={model}
+            onChange={(e) => onModelChange(e.target.value)}
+            title="Model — locked"
+          >
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </header>
+
+      <div className="chat-scroll" ref={scrollRef}>
+        <div className="chat-inner">
+          {timeline.length === 0 && !streaming ? (
+            <EmptyState
+              onSend={onSend}
+              onOpenPanel={onOpenPanel}
+              onOpenStoreTests={onOpenStoreTests}
+              starters={prefs.starters}
+              idle={idle}
+            />
+          ) : (
+            timeline.map((item, index) => (
+              <Turn
+                key={item.id}
+                role={item.role}
+                content={item.content}
+                cards={item.cards}
+                index={index}
+                showTools={prefs.showTools}
+                expandTools={prefs.expandTools}
+                at={item.created_at}
+                showTime={prefs.timestamps}
+              />
+            ))
+          )}
+
+          {streaming && (
+            <Turn
+              role="assistant"
+              content={liveText}
+              cards={liveTools}
+              streaming
+              streamingLabel={liveStatus}
+              showTools={prefs.showTools}
+              showDots={prefs.thinkingDots}
+            />
+          )}
+
+          {error && (
+            <div className="error-box">
+              <IconAlert width={15} height={15} />
+              <div>
+                <div className="error-title">The agent hit a problem</div>
+                <div className="error-text">{error}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="composer-wrap">
+        {consentRequest && (
+          <ConsentCard
+            request={consentRequest}
+            busy={consentBusy}
+            onApprove={onConsentApprove}
+          />
+        )}
+        {browserRequest && (
+          <BrowserCard
+            request={browserRequest}
+            busy={browserBusy}
+            onApprove={onBrowserApprove}
+          />
+        )}
+        {session && (
+          <ScanCard
+            scan={scan}
+            scanning={scanning}
+            autoFix={autoFix}
+            onToggleAuto={onToggleAutoFix}
+            onApply={onApplyFixes}
+          />
+        )}
+        <Composer
+          onSend={onSend}
+          streaming={streaming}
+          onStop={onStop}
+          napping={idle !== 'awake' && !streaming}
+          enterToSend={prefs.enterToSend}
+        />
+        <div className="composer-hint">
+          Files land in the workspace — export a ZIP for VS Code.
+        </div>
+      </div>
+    </div>
+  );
+}

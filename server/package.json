@@ -1,0 +1,16 @@
+{
+  "name": "orbit-server",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@e2b/desktop": "^2.5.0",
+    "archiver": "^7.0.1",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}

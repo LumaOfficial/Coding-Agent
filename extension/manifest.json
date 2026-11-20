@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Orbit — browser control",
+  "version": "1.0.0",
+  "description": "Lets Orbit operate the tab you allow. Every click, type and navigation asks for your approval first.",
+  "permissions": ["scripting", "tabs", "storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Orbit browser control"
+  }
+}
