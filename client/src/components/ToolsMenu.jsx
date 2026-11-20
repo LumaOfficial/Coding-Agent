@@ -8,6 +8,7 @@ import {
   IconGithub,
   IconGlobe,
   IconPanel,
+  IconSend,
   IconSpark,
   IconTerminal,
 } from './Icons.jsx';
@@ -82,6 +83,20 @@ const TOOLS = [
     hint: 'OS, runtime and installed tools',
     icon: IconPanel,
     prompt: 'What coding platform am I on?',
+  },
+  {
+    id: 'email',
+    label: 'Email someone',
+    hint: 'Write it in your own inbox',
+    icon: IconSend,
+    prompt: 'Write an email to a colleague that says I will send the project update tomorrow morning.',
+  },
+  {
+    id: 'music',
+    label: 'Play music',
+    hint: 'YouTube Music, Spotify, more',
+    icon: IconSpark,
+    prompt: 'Play some lo-fi beats on YouTube Music.',
   },
   {
     id: 'vscode',

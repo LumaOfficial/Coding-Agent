@@ -9,6 +9,7 @@ import * as platform from './platform.js';
 import * as platforms from './platforms.js';
 import * as autofix from './autofix.js';
 import * as stores from './stores.js';
+import * as integrations from './integrations.js';
 
 const modules = [
   workspace,
@@ -22,6 +23,7 @@ const modules = [
   platform,
   autofix,
   stores,
+  integrations,
 ];
 
 export const toolDefinitions = modules.flatMap((m) => m.definitions);

@@ -116,6 +116,16 @@ export function toolActivity(name, args = {}) {
       return `Pressing ${clip(args.key) || 'a key'} in your browser…`;
     case 'browser_scroll':
       return `Scrolling ${args.direction || 'down'} in your browser…`;
+    case 'email_compose':
+      return `Writing an email to ${clip(args.to) || 'someone'}…`;
+    case 'email_inbox':
+      return 'Opening the inbox…';
+    case 'github_create_repo':
+      return `Creating ${clip(args.name) || 'a repository'} on GitHub…`;
+    case 'music_play':
+      return `Playing ${quoted(args.query || 'music')}…`;
+    case 'calendar_event':
+      return `Scheduling ${quoted(args.title)}…`;
     case 'web_search':
       return `Searching the web for ${quoted(args.query)}…`;
     case 'web_fetch':

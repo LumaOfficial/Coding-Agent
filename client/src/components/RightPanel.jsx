@@ -12,6 +12,7 @@ import {
 import StoreTests from './StoreTests.jsx';
 import Platforms from './Platforms.jsx';
 import PlatformCard from './PlatformCard.jsx';
+import KeyFreeIntegrations from './KeyFreeIntegrations.jsx';
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -223,6 +224,8 @@ export default function RightPanel({
               </a>
             }
           />
+
+          <KeyFreeIntegrations connected={integrations?.browser?.connected} />
 
           <PlatformCard />
           <Platforms />
