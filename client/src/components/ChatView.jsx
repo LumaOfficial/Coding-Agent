@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import Markdown from './Markdown.jsx';
 import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
+import ScanCard from './ScanCard.jsx';
 import {
   IconAlert,
   IconCheck,
@@ -180,6 +181,11 @@ export default function ChatView({
   onTogglePanel,
   onToggleSidebar,
   onOpenStoreTests,
+  scan,
+  scanning,
+  autoFix,
+  onToggleAutoFix,
+  onApplyFixes,
 }) {
   const scrollRef = useRef(null);
 
@@ -279,6 +285,15 @@ export default function ChatView({
       </div>
 
       <div className="composer-wrap">
+        {session && (
+          <ScanCard
+            scan={scan}
+            scanning={scanning}
+            autoFix={autoFix}
+            onToggleAuto={onToggleAutoFix}
+            onApply={onApplyFixes}
+          />
+        )}
         <Composer onSend={onSend} streaming={streaming} onStop={onStop} />
         <div className="composer-hint">
           Files land in the workspace — export a ZIP for VS Code.

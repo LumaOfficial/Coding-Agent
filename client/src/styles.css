@@ -922,6 +922,137 @@ button {
   text-align: center;
 }
 
+/* ---------------- auto scan ---------------- */
+
+.scan-card {
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.028);
+  overflow: hidden;
+}
+
+.scan-card.warn {
+  border-color: rgba(255, 178, 102, 0.28);
+  background: rgba(255, 178, 102, 0.055);
+}
+
+.scan-card.ok {
+  border-color: rgba(63, 220, 156, 0.26);
+  background: rgba(63, 220, 156, 0.05);
+}
+
+.scan-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 7px;
+  padding: 6px 9px;
+  min-height: 38px;
+}
+
+.scan-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.scan-card.warn .scan-icon {
+  color: var(--orange);
+}
+
+.scan-card.ok .scan-icon {
+  color: var(--green);
+}
+
+.scan-title {
+  flex: 1 1 140px;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-card.warn .scan-title {
+  color: var(--text);
+}
+
+.scan-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.scan-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.scan-toggle input {
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.scan-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 7px 9px 9px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.scan-section {
+  margin-top: 4px;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.scan-section:first-child {
+  margin-top: 0;
+}
+
+.scan-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.scan-row svg {
+  position: relative;
+  top: 1px;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.scan-path {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text);
+}
+
+.scan-note {
+  min-width: 0;
+  color: var(--muted);
+}
+
 /* ---------------- markdown ---------------- */
 
 .markdown {

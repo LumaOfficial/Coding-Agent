@@ -15,7 +15,7 @@ import {
   workspaceDir,
 } from './store.js';
 import { runAgent, LOCAL_MODEL } from './agent.js';
-import { fixWorkspace } from './autofix.js';
+import { fixWorkspace, scanWorkspace } from './autofix.js';
 import { detectPlatform } from './platform.js';
 import { listStoreTargets, runStoreTests } from './stores.js';
 
@@ -245,6 +245,16 @@ app.post('/api/sessions/:id/store-tests', async (req, res) => {
     res.json(await runStoreTests(req.params.id, req.body?.targets));
   } catch (error) {
     res.status(500).json({ error: error.message || 'Store tests failed' });
+  }
+});
+
+app.get('/api/sessions/:id/scan', async (req, res) => {
+  const session = await getSession(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  try {
+    res.json(await scanWorkspace(req.params.id));
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Scan failed' });
   }
 });
 

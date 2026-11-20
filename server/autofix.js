@@ -226,10 +226,14 @@ export function analyzeCode(input, filePath = 'snippet.js', allPaths = null) {
   return { code, changes, issues };
 }
 
-export async function fixWorkspace(sessionId) {
+/**
+ * Reads the workspace and returns the edits that would be made, without
+ * touching any file. Shared by the scan (suggestions) and the apply step.
+ */
+async function collectWorkspaceFixes(sessionId) {
   const files = (await listWorkspaceFiles(sessionId)).slice(0, MAX_FILES);
   const allPaths = new Set(files.map((file) => file.path));
-  const fixes = [];
+  const pending = [];
   const issues = [];
   const state = { syntaxChecks: 0 };
   let checked = 0;
@@ -249,10 +253,7 @@ export async function fixWorkspace(sessionId) {
     checked += 1;
     const { code, changes } = textFixes(content, ext);
 
-    if (code !== content) {
-      await writeWorkspaceFile(sessionId, file.path, code);
-      fixes.push({ path: file.path, changes });
-    }
+    if (code !== content) pending.push({ path: file.path, changes, code });
 
     if (ext === '.json') issues.push(...checkJson(code, file.path));
     if (JS_EXT.has(ext)) issues.push(...checkJsSyntax(code, file.path, ext, state));
@@ -261,14 +262,39 @@ export async function fixWorkspace(sessionId) {
     if (ext === '.html') issues.push(...checkHtmlTags(code, file.path));
   }
 
-  const errors = issues.filter((issue) => issue.severity === 'error');
+  return { checked, pending, issues };
+}
 
+function report({ checked, pending, issues }) {
+  const errors = issues.filter((issue) => issue.severity === 'error');
   return {
     checked,
-    fixed_files: fixes.length,
-    fixes,
+    fixes: pending.map((fix) => ({ path: fix.path, changes: fix.changes })),
     issues,
     error_count: errors.length,
     ok: errors.length === 0,
+    clean: pending.length === 0 && errors.length === 0,
+  };
+}
+
+/** Scans the workspace and reports suggested edits without applying them. */
+export async function scanWorkspace(sessionId) {
+  return report(await collectWorkspaceFixes(sessionId));
+}
+
+/** Applies the safe edits and reports what is left. */
+export async function fixWorkspace(sessionId) {
+  const result = await collectWorkspaceFixes(sessionId);
+
+  for (const fix of result.pending) {
+    await writeWorkspaceFile(sessionId, fix.path, fix.code);
+  }
+
+  const { fixes, ...rest } = report(result);
+  return {
+    ...rest,
+    clean: rest.error_count === 0,
+    fixed_files: fixes.length,
+    fixes,
   };
 }

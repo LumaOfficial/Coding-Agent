@@ -5,6 +5,9 @@ A chat IDE whose agent repairs and debugs code for you, with no model calls and 
 - **Local engine** — deterministic repair and debugging: syntax errors, invalid JSON, missing
   imports, unbalanced braces, unclosed tags, line endings, whitespace, tabs, trailing commas,
   `debugger` statements and final newlines. Nothing leaves the machine.
+- **Always-on scan** — every session open and every turn ends with an automatic scan of the
+  workspace. Safe edits are applied by default (toggle **Auto** off to review first); anything
+  ambiguous is listed as a suggested edit with file and line.
 - **Workspace** — files live in a per-session workspace you can browse and export as a ZIP.
 - **GitHub** — search repos, list directories and read files from any public repo with no token
   (60 requests/hour anonymously). A token only adds branch creation, commits and pull requests.
@@ -39,6 +42,7 @@ Public GitHub reads and Hugging Face search work with neither key; the UI report
 ## Endpoints
 
 - `POST /api/sessions/:id/chat` — SSE turn: runs the local engine and streams the report.
+- `GET /api/sessions/:id/scan` — scans the workspace and returns suggested edits without applying them.
 - `POST /api/sessions/:id/autofix` — repairs the workspace and returns the findings as JSON.
 - `POST /api/sessions/:id/store-tests` — runs the store readiness checks (`targets` optional) and
   returns the per-store report as JSON.

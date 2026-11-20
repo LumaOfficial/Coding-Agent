@@ -25,6 +25,8 @@ export const api = {
   workspace: (id) => request(`/api/sessions/${id}/workspace`),
   file: (id, path) => request(`/api/sessions/${id}/file?path=${encodeURIComponent(path)}`),
   stores: () => request('/api/stores'),
+  scan: (id) => request(`/api/sessions/${id}/scan`),
+  autofix: (id) => request(`/api/sessions/${id}/autofix`, { method: 'POST' }),
   storeTests: (id, targets) =>
     request(`/api/sessions/${id}/store-tests`, { method: 'POST', body: { targets } }),
 };

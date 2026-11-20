@@ -19,27 +19,78 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState('files');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [scan, setScan] = useState(null);
+  const [scanning, setScanning] = useState(false);
+  const [autoFix, setAutoFix] = useState(() => {
+    try {
+      return localStorage.getItem('forge.autoFix') !== 'off';
+    } catch {
+      return true;
+    }
+  });
 
   const abortRef = useRef(null);
   const activeIdRef = useRef(null);
+  const autoFixRef = useRef(autoFix);
+  const scanTokenRef = useRef(0);
 
-  const openSession = useCallback(async (id) => {
-    abortRef.current?.abort();
-    setStreaming(false);
-    setLiveText('');
-    setLiveTools([]);
-    setError('');
+  useEffect(() => {
+    autoFixRef.current = autoFix;
     try {
-      const data = await api.session(id);
-      activeIdRef.current = id;
-      setSession(data.session);
-      setMessages(data.messages);
-      setFiles(data.files);
-    } catch (err) {
-      setError(err.message);
+      localStorage.setItem('forge.autoFix', autoFix ? 'on' : 'off');
+    } catch {
+      /* ignore */
     }
-    setSidebarOpen(false);
+  }, [autoFix]);
+
+  // Always-on scan: runs by itself on every session open and after every turn.
+  const runScan = useCallback(async (id) => {
+    if (!id) return;
+    const token = ++scanTokenRef.current;
+    setScanning(true);
+    try {
+      const result = await api.scan(id);
+      if (token !== scanTokenRef.current) return;
+      setScan(result);
+
+      if (autoFixRef.current && result.fixes.length) {
+        const applied = await api.autofix(id);
+        if (token !== scanTokenRef.current) return;
+        const filesData = await api.workspace(id).catch(() => null);
+        if (filesData) setFiles(filesData.files);
+        const after = await api.scan(id);
+        if (token !== scanTokenRef.current) return;
+        setScan({ ...after, applied: applied.fixes });
+      }
+    } catch {
+      /* scan is best-effort — never block the chat */
+    } finally {
+      if (token === scanTokenRef.current) setScanning(false);
+    }
   }, []);
+
+  const openSession = useCallback(
+    async (id) => {
+      abortRef.current?.abort();
+      setStreaming(false);
+      setLiveText('');
+      setLiveTools([]);
+      setError('');
+      setScan(null);
+      try {
+        const data = await api.session(id);
+        activeIdRef.current = id;
+        setSession(data.session);
+        setMessages(data.messages);
+        setFiles(data.files);
+      } catch (err) {
+        setError(err.message);
+      }
+      setSidebarOpen(false);
+      runScan(id);
+    },
+    [runScan]
+  );
 
   const refreshIntegrations = useCallback(async () => {
     try {
@@ -78,6 +129,7 @@ export default function App() {
     setLiveText('');
     setLiveTools([]);
     setError('');
+    setScan(null);
     setSidebarOpen(false);
   }
 
@@ -176,6 +228,24 @@ export default function App() {
       }
       setLiveText('');
       setLiveTools([]);
+      runScan(sid);
+    }
+  }
+
+  async function applyFixes() {
+    if (!session || scanning) return;
+    const id = session.id;
+    setScanning(true);
+    try {
+      const applied = await api.autofix(id);
+      const after = await api.scan(id);
+      setScan({ ...after, applied: applied.fixes });
+      const data = await api.workspace(id);
+      setFiles(data.files);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setScanning(false);
     }
   }
 
@@ -222,6 +292,11 @@ export default function App() {
           panelOpen={panelOpen}
           onTogglePanel={() => setPanelOpen((v) => !v)}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          scan={scan}
+          scanning={scanning}
+          autoFix={autoFix}
+          onToggleAutoFix={() => setAutoFix((value) => !value)}
+          onApplyFixes={applyFixes}
           onOpenStoreTests={() => {
             setPanelTab('stores');
             setPanelOpen(true);
