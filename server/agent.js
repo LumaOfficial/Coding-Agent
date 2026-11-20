@@ -23,9 +23,11 @@ I repair and debug code with deterministic checks:
 - **Paste a snippet** — send a fenced code block and I return the corrected code plus any remaining problems.
 - **List files** — shows what is in the workspace.
 - **Detect my platform** — reports the OS, container, runtime and installed tools.
+- **GitHub** — search public repos, list a repo's files and read any file. No token needed.
+- **Hugging Face** — search models, datasets and spaces, and read model cards. No token needed.
 - **Test store readiness** — checks the workspace against Chrome Web Store, Edge Add-ons, Mozilla Add-ons, Opera Add-ons, Google Play, Apple App Store, VS Code Marketplace and Hugging Face Spaces, and lists exactly what each one is missing.
 
-Say "fix my code" or "test my store readiness" to start.`;
+Say "search github for react", "find a hugging face model for sentiment", "fix my code" or "test my store readiness" to start.`;
 
 const EXT_BY_LANG = {
   js: 'js',
@@ -53,15 +55,17 @@ function extractCodeBlock(text) {
   return { code: match[2], ext: EXT_BY_LANG[lang] || 'txt' };
 }
 
+const STORE_WORDS =
+  /\b(store|stores|marketplace|marketplaces|add-?ons?|listing|readiness|submission)\b/;
+const STORE_NAMES =
+  /chrome web|play store|app store|google play|mozilla|firefox|opera|edge add|vs ?code marketplace/;
+
 function classify(text, snippet) {
   const lower = text.toLowerCase();
   if (snippet) return 'snippet';
-
-  const storeWords =
-    /\b(store|stores|marketplace|marketplaces|add-?ons?|listing|readiness|submission|publish|tests?)\b/;
-  const storeNames =
-    /chrome web|play store|app store|google play|mozilla|firefox|opera|edge add|vs ?code|hugging ?face/;
-  if (storeWords.test(lower) || storeNames.test(lower)) return 'stores';
+  if (STORE_WORDS.test(lower) || STORE_NAMES.test(lower)) return 'stores';
+  if (/\bgithub\b|github\.com/.test(lower)) return 'github';
+  if (/\b(hugging\s?face|hf)\b/.test(lower) || /\bmodel card\b/.test(lower)) return 'hf';
 
   if (/\b(fix|repair|autofix|auto-fix|debug|lint|check|errors?|broken|syntax|not working)\b/.test(lower)) {
     return 'fix';
@@ -70,6 +74,63 @@ function classify(text, snippet) {
   if (/\b(list|files|workspace)\b/.test(lower)) return 'files';
   if (/\b(read|open|show)\b.*\.\w+/.test(lower)) return 'read';
   return 'help';
+}
+
+const GITHUB_STOP =
+  /\b(please|search|find|look|up|show|me|for|about|on|in|from|github|repos?|repositories?|projects?|a|an|the|some|any)\b/gi;
+const HF_STOP =
+  /\b(please|search|find|look|up|show|me|for|about|on|in|from|hugging|face|hf|models?|datasets?|spaces?|a|an|the|some|any)\b/gi;
+
+function cleanQuery(text, stop) {
+  return text
+    .replace(stop, ' ')
+    .replace(/[?!.]+$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Pick the GitHub tool for a message — public reads, no token involved. */
+function parseGitHub(text) {
+  const url = text.match(/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/(?:blob|tree)\/([^\s)?"']+))?/i);
+  if (url) {
+    const [, owner, repo, rest] = url;
+    if (rest) {
+      const parts = rest.split('/');
+      const path = parts.length > 1 ? parts.slice(1).join('/') : parts[0];
+      return { tool: 'github_read_file', args: { owner, repo, path } };
+    }
+    return { tool: 'github_list_dir', args: { owner, repo } };
+  }
+
+  const lower = text.toLowerCase();
+  const repoRef = text.match(/\b([\w.-]+)\/([\w.-]+)\b/);
+  if (repoRef && /\b(list|browse|files?|contents?|read|open|show|repo|repository)\b/.test(lower)) {
+    const [, owner, repo] = repoRef;
+    const fileRef = text.match(/\b[\w.-]+(?:\/[\w.-]+)+\.[a-z0-9]{1,6}\b/i);
+    if (fileRef && /\b(read|open|show)\b/.test(lower)) {
+      const path = fileRef[0].replace(new RegExp(`^${owner}/${repo}/`, 'i'), '');
+      return { tool: 'github_read_file', args: { owner, repo, path } };
+    }
+    return { tool: 'github_list_dir', args: { owner, repo } };
+  }
+
+  const query = cleanQuery(text, GITHUB_STOP);
+  if (!query) return null;
+  return { tool: 'github_search_repos', args: { query } };
+}
+
+/** Pick the Hugging Face tool for a message — public search, no token involved. */
+function parseHuggingFace(text) {
+  const lower = text.toLowerCase();
+  const modelRef = text.match(/\b([\w.-]+\/[\w.-]+)\b/);
+  if (modelRef && /\b(model card|model info|details|readme|about)\b/.test(lower)) {
+    return { tool: 'hf_model_info', args: { model_id: modelRef[1] } };
+  }
+
+  const kind = /\bdatasets?\b/.test(lower) ? 'datasets' : /\bspaces?\b/.test(lower) ? 'spaces' : 'models';
+  const query = cleanQuery(text, HF_STOP);
+  if (!query) return null;
+  return { tool: `hf_search_${kind}`, args: { query } };
 }
 
 function formatIssues(issues) {
@@ -180,6 +241,25 @@ function summarizeFiles(data) {
   ].join('\n');
 }
 
+function summarizeGitHub(toolName, args, content) {
+  if (toolName === 'github_read_file') {
+    return `**\`${args.owner}/${args.repo}/${args.path}\`**\n\n\`\`\`\n${content.slice(0, 4000)}\n\`\`\``;
+  }
+  if (toolName === 'github_list_dir') {
+    const where = `${args.owner}/${args.repo}${args.path ? `/${args.path}` : ''}`;
+    return `**\`${where}\`**\n\n\`\`\`\n${content}\n\`\`\`\n\n_Public read — no token needed._`;
+  }
+  return `**GitHub repositories**\n\n${content}\n\n_Public read — no token needed._`;
+}
+
+function summarizeHuggingFace(toolName, args, content) {
+  if (toolName === 'hf_model_info') {
+    return `**Hugging Face · \`${args.model_id}\`**\n\n${content}\n\n_Public read — no token needed._`;
+  }
+  const kind = toolName.replace('hf_search_', '');
+  return `**Hugging Face ${kind}**\n\n${content}\n\n_Public search — no token needed._`;
+}
+
 export async function runAgent({ sessionId, emit }) {
   const session = await getSession(sessionId);
   if (!session) throw new Error('Session not found');
@@ -202,6 +282,18 @@ export async function runAgent({ sessionId, emit }) {
   } else if (intent === 'snippet') {
     toolName = 'check_code';
     args = { code: snippet.code, path: `snippet.${snippet.ext}` };
+  } else if (intent === 'github') {
+    const request = parseGitHub(text);
+    if (request) {
+      toolName = request.tool;
+      args = request.args;
+    }
+  } else if (intent === 'hf') {
+    const request = parseHuggingFace(text);
+    if (request) {
+      toolName = request.tool;
+      args = request.args;
+    }
   } else if (intent === 'platform') {
     toolName = 'detect_platform';
   } else if (intent === 'files') {
@@ -248,6 +340,8 @@ export async function runAgent({ sessionId, emit }) {
     else if (toolName === 'check_code' && data) summary = summarizeSnippet(data);
     else if (toolName === 'detect_platform' && data) summary = summarizePlatform(data);
     else if (toolName === 'list_files' && data) summary = summarizeFiles(data);
+    else if (toolName.startsWith('github_')) summary = summarizeGitHub(toolName, args, result.content);
+    else if (toolName.startsWith('hf_')) summary = summarizeHuggingFace(toolName, args, result.content);
     else if (toolName === 'read_file' && data) {
       summary = `**\`${args.path}\`**\n\n\`\`\`\n${String(data.content || '').slice(0, 4000)}\n\`\`\``;
     } else summary = result.content;

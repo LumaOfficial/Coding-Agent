@@ -41,33 +41,71 @@ app.get('/api/stores', (req, res) => {
 let integrationCache = { at: 0, data: null };
 
 async function probeGitHub() {
-  if (!process.env.GITHUB_TOKEN) return { connected: false, readOnly: true };
+  const auth = process.env.GITHUB_TOKEN;
+  if (auth) {
+    try {
+      const res = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${auth}`,
+          Accept: 'application/vnd.github+json',
+        },
+      });
+      if (!res.ok) return { connected: false, error: `Token rejected (${res.status})` };
+      const user = await res.json();
+      return { connected: true, login: user.login, avatar: user.avatar_url, mode: 'token' };
+    } catch (error) {
+      return { connected: false, error: error.message };
+    }
+  }
+
+  // No token: public reads still work, so report the real anonymous state.
   try {
-    const res = await fetch('https://api.github.com/user', {
-      headers: {
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github+json',
-      },
+    const res = await fetch('https://api.github.com/rate_limit', {
+      headers: { Accept: 'application/vnd.github+json' },
     });
-    if (!res.ok) return { connected: false, error: `Token rejected (${res.status})` };
-    const user = await res.json();
-    return { connected: true, login: user.login, avatar: user.avatar_url };
+    if (!res.ok) {
+      return { connected: false, readOnly: true, mode: 'anonymous', ok: false, error: `GitHub ${res.status}` };
+    }
+    const data = await res.json();
+    const core = data.resources?.core || {};
+    return {
+      connected: false,
+      readOnly: true,
+      mode: 'anonymous',
+      ok: true,
+      login: 'public read only',
+      limit: core.limit ?? 60,
+      remaining: core.remaining ?? null,
+    };
   } catch (error) {
-    return { connected: false, error: error.message };
+    return { connected: false, readOnly: true, mode: 'anonymous', ok: false, error: error.message };
   }
 }
 
 async function probeHuggingFace() {
-  if (!process.env.HF_TOKEN) return { connected: false };
+  const token = process.env.HF_TOKEN;
+  if (token) {
+    try {
+      const res = await fetch('https://huggingface.co/api/whoami-v2', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return { connected: false, error: `Token rejected (${res.status})` };
+      const data = await res.json();
+      return { connected: true, name: data.name || data.fullname, mode: 'token' };
+    } catch (error) {
+      return { connected: false, error: error.message };
+    }
+  }
+
+  // No token: public search and model cards are open.
   try {
-    const res = await fetch('https://huggingface.co/api/whoami-v2', {
-      headers: { Authorization: `Bearer ${process.env.HF_TOKEN}` },
-    });
-    if (!res.ok) return { connected: false, error: `Token rejected (${res.status})` };
-    const data = await res.json();
-    return { connected: true, name: data.name || data.fullname };
+    const res = await fetch('https://huggingface.co/api/models?limit=1');
+    if (!res.ok) {
+      return { connected: false, mode: 'public', ok: false, error: `Hugging Face ${res.status}` };
+    }
+    return { connected: false, mode: 'public', ok: true, name: 'public search' };
   } catch (error) {
-    return { connected: false, error: error.message };
+    return { connected: false, mode: 'public', ok: false, error: error.message };
   }
 }
 

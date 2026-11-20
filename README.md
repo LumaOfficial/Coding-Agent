@@ -6,8 +6,9 @@ A chat IDE whose agent repairs and debugs code for you, with no model calls and 
   imports, unbalanced braces, unclosed tags, line endings, whitespace, tabs, trailing commas,
   `debugger` statements and final newlines. Nothing leaves the machine.
 - **Workspace** — files live in a per-session workspace you can browse and export as a ZIP.
-- **GitHub** — search repos, list directories, read files, create branches, commit and open pull requests.
-- **Hugging Face** — search models, datasets and spaces, and read model cards.
+- **GitHub** — search repos, list directories and read files from any public repo with no token
+  (60 requests/hour anonymously). A token only adds branch creation, commits and pull requests.
+- **Hugging Face** — search models, datasets and spaces and read model cards with no token.
 - **VS Code** — `generate_vscode_workspace` adds a `.code-workspace`, `.vscode/settings.json` and `tasks.json`; export the ZIP and open the folder.
 - **Platform detection** — `GET /api/platform` reports the OS, container, runtime, shell, editor,
   CI, git repo and installed tools of the machine the agent runs on.
@@ -30,10 +31,10 @@ No key is required. The engine is local; `GROQ_API_KEY` is not read anywhere.
 
 | Key | Required | Purpose |
 | --- | --- | --- |
-| `GITHUB_TOKEN` | for GitHub tools | Repo read/commit/PR, `repo` scope |
-| `HF_TOKEN` | no | Private Hugging Face repos, higher rate limits |
+| `GITHUB_TOKEN` | no | Only for commits and pull requests, `repo` scope |
+| `HF_TOKEN` | no | Only for private Hugging Face repos and higher rate limits |
 
-The UI runs without them and shows what is not connected.
+Public GitHub reads and Hugging Face search work with neither key; the UI reports that state.
 
 ## Endpoints
 

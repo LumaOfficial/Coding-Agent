@@ -180,13 +180,15 @@ export default function RightPanel({
           <IntegrationCard
             icon={<IconGithub width={15} height={15} />}
             title="GitHub"
-            connected={github?.connected}
+            connected={github?.connected || github?.ok}
             statusText={
               github?.connected
                 ? `Signed in as ${github.login}`
-                : github?.error || 'Public read only'
+                : github?.ok
+                  ? 'Public read · no token needed'
+                  : github?.error || 'Unavailable'
             }
-            description="Browses and reads public repos with no token. Add a token to commit to branches and open pull requests."
+            description="Searches public repos, lists files and reads any file with no token — 60 requests an hour anonymously. A token is only needed for commits and pull requests."
             steps={[
               'Optional: create a fine-grained or classic token with repo scope',
               'Add it as GITHUB_TOKEN to unlock commits and pull requests',
@@ -206,9 +208,15 @@ export default function RightPanel({
           <IntegrationCard
             icon={<IconSpark width={15} height={15} />}
             title="Hugging Face"
-            connected={hf?.connected}
-            statusText={hf?.connected ? `Signed in as ${hf.name}` : 'Public search only'}
-            description="Searches models, datasets and spaces. A token unlocks private repos and higher rate limits."
+            connected={hf?.connected || hf?.ok}
+            statusText={
+              hf?.connected
+                ? `Signed in as ${hf.name}`
+                : hf?.ok
+                  ? 'Public search · no token needed'
+                  : hf?.error || 'Unavailable'
+            }
+            description="Searches models, datasets and spaces and reads model cards with no token. A token only adds private repos and higher rate limits."
             steps={[
               'Create a read token at huggingface.co/settings/tokens',
               'Add it as HF_TOKEN in the secrets panel',

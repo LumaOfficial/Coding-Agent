@@ -27,8 +27,10 @@ export default function Sidebar({
   open,
   onClose,
 }) {
-  const github = integrations?.github?.connected;
-  const hf = integrations?.huggingface?.connected;
+  const github = integrations?.github;
+  const hf = integrations?.huggingface;
+  const githubOk = github?.connected || github?.ok;
+  const hfOk = hf?.connected || hf?.ok;
 
   return (
     <>
@@ -94,16 +96,22 @@ export default function Sidebar({
             <span className="status-value">local · no key</span>
           </div>
           <div className="status-row">
-            <StatusDot ok={github} />
+            <StatusDot ok={githubOk} />
             <span>GitHub</span>
             <span className="status-value">
-              {github ? integrations.github.login : 'read only'}
+              {github?.connected
+                ? github.login
+                : githubOk
+                  ? 'read only · no token'
+                  : github?.error || 'offline'}
             </span>
           </div>
           <div className="status-row">
-            <StatusDot ok={hf} />
+            <StatusDot ok={hfOk} />
             <span>Hugging Face</span>
-            <span className="status-value">{hf ? 'connected' : 'public only'}</span>
+            <span className="status-value">
+              {hf?.connected ? 'connected' : hfOk ? 'public · no token' : hf?.error || 'offline'}
+            </span>
           </div>
         </div>
       </aside>

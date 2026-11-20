@@ -4,6 +4,7 @@ import ToolCard from './ToolCard.jsx';
 import Composer from './Composer.jsx';
 import {
   IconAlert,
+  IconCheck,
   IconFile,
   IconGithub,
   IconMenu,
@@ -24,18 +25,28 @@ const SUGGESTIONS = [
     prompt: 'Debug my workspace and show every syntax error and missing import with file and line.',
   },
   {
+    icon: <IconGithub width={14} height={14} />,
+    title: 'Search GitHub',
+    prompt: 'Search GitHub for a react dashboard starter',
+  },
+  {
+    icon: <IconFile width={14} height={14} />,
+    title: 'Find a Hugging Face model',
+    prompt: 'Search Hugging Face for a sentiment analysis model',
+  },
+  {
     icon: <IconTerminal width={14} height={14} />,
     title: 'Check a snippet',
     prompt:
       'Check this snippet and fix it:\n\n```js\nfunction add(a, b) {\n  return a + b\n}\n\nconst total = add(1, 2;\n```',
   },
   {
-    icon: <IconGithub width={14} height={14} />,
+    icon: <IconPanel width={14} height={14} />,
     title: 'Detect my platform',
     prompt: 'What coding platform am I on?',
   },
   {
-    icon: <IconFile width={14} height={14} />,
+    icon: <IconCheck width={14} height={14} />,
     title: 'Test store readiness',
     prompt:
       'Run store readiness tests on my workspace for the Chrome Web Store, Google Play, the Apple App Store and Firefox Add-ons, and show what is missing.',
